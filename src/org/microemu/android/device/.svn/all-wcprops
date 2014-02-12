@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/svn/!svn/ver/2534/trunk/microemulator/microemu-android/src/org/microemu/android/device
+END
+AndroidDevice.java
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/svn/!svn/ver/2236/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidDevice.java
+END
+AndroidInputMethod.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/2439/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidInputMethod.java
+END
+AndroidFontManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 111
+/svn/!svn/ver/2500/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidFontManager.java
+END
+AndroidImmutableImage.java
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/svn/!svn/ver/1787/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidImmutableImage.java
+END
+AndroidDeviceDisplay.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/2529/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidDeviceDisplay.java
+END
+AndroidFont.java
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/svn/!svn/ver/2419/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidFont.java
+END
+AndroidDisplayGraphics.java
+K 25
+svn:wc:ra_dav:version-url
+V 115
+/svn/!svn/ver/2534/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidDisplayGraphics.java
+END
+GraphicsDelegate.java
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/svn/!svn/ver/2329/trunk/microemulator/microemu-android/src/org/microemu/android/device/GraphicsDelegate.java
+END
+DebugDisplayGraphics.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/2453/trunk/microemulator/microemu-android/src/org/microemu/android/device/DebugDisplayGraphics.java
+END
+AndroidMutableImage.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/2222/trunk/microemulator/microemu-android/src/org/microemu/android/device/AndroidMutableImage.java
+END

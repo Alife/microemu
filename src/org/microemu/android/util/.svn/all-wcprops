@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 85
+/svn/!svn/ver/2510/trunk/microemulator/microemu-android/src/org/microemu/android/util
+END
+AndroidLoggerAppender.java
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/svn/!svn/ver/1605/trunk/microemulator/microemu-android/src/org/microemu/android/util/AndroidLoggerAppender.java
+END
+Overlay.java
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/svn/!svn/ver/2408/trunk/microemulator/microemu-android/src/org/microemu/android/util/Overlay.java
+END
+ActivityResultListener.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/2457/trunk/microemulator/microemu-android/src/org/microemu/android/util/ActivityResultListener.java
+END
+ValueObject.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/2483/trunk/microemulator/microemu-android/src/org/microemu/android/util/ValueObject.java
+END
+AndroidRecordStoreManager.java
+K 25
+svn:wc:ra_dav:version-url
+V 116
+/svn/!svn/ver/2134/trunk/microemulator/microemu-android/src/org/microemu/android/util/AndroidRecordStoreManager.java
+END
+AndroidRepaintListener.java
+K 25
+svn:wc:ra_dav:version-url
+V 113
+/svn/!svn/ver/2385/trunk/microemulator/microemu-android/src/org/microemu/android/util/AndroidRepaintListener.java
+END
+Workarounds.java
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/svn/!svn/ver/2510/trunk/microemulator/microemu-android/src/org/microemu/android/util/Workarounds.java
+END
