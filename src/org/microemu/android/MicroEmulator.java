@@ -79,13 +79,14 @@ public class MicroEmulator extends MicroEmulatorActivity {
 	public Common common;
 	
 	private MIDlet midlet;
-@Override
-public boolean dispatchKeyEvent(KeyEvent event) {
-	int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
-            if (ignoreKey(keyCode)) {
-                return super.dispatchKeyEvent(event);    
-            }	
-	MIDletAccess ma = MIDletBridge.getMIDletAccess();
+	
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent event) {
+		int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
+	            if (ignoreKey(keyCode)) {
+	                return super.dispatchKeyEvent(event);    
+	            }	
+		MIDletAccess ma = MIDletBridge.getMIDletAccess();
 		if (ma == null) {
 			return false;
 		}
@@ -169,7 +170,18 @@ public boolean dispatchKeyEvent(KeyEvent event) {
 			Device device = DeviceFactory.getDevice();
 			if(keyAction==KeyEvent.ACTION_DOWN)((AndroidInputMethod) device.getInputMethod()).buttonPressed(keyCode);
 			else if(keyAction==KeyEvent.ACTION_UP)((AndroidInputMethod) device.getInputMethod()).buttonReleased(keyCode);
-			else {((AndroidInputMethod) device.getInputMethod()).buttonPressed(keyCode);((AndroidInputMethod) device.getInputMethod()).buttonReleased(keyCode);}
+			else {
+				((AndroidInputMethod) device.getInputMethod()).buttonPressed(keyCode);
+				((AndroidInputMethod) device.getInputMethod()).buttonReleased(keyCode);
+				// support Chinese word
+				if(event.getCharacters().length()>1){
+					for (int i = 1; i < event.getCharacters().length(); i++) {
+						int j = event.getCharacters().charAt(i);
+						((AndroidInputMethod) device.getInputMethod()).buttonPressed(j);
+						((AndroidInputMethod) device.getInputMethod()).buttonReleased(j);
+					}
+				}
+			}
 
 			return true;
 		}
