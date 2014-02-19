@@ -1,3 +1,5 @@
+MIDlet-Jar-Size: 533608
+MIDlet-Jar-URL: Opera Mini 4.22.jar
 Manifest-Version: 1.0
 Ant-Version: Apache Ant 1.8.2
 Created-By: 1.7.0_09-b05 (Oracle Corporation)
@@ -20,12 +22,4 @@ MIDlet-Name: Opera Mini 4.22
 MIDlet-1: Opera Mini 4.22, /i.png, Browser
 MIDlet-Version: 4.22
 MIDlet-Permissions: javax.microedition.io.Connector.http
-MIDlet-Permissions-Opt: javax.microedition.io.Connector.sms, javax.wir
- eless.messaging.sms.send, javax.microedition.midlet.MIDlet.platformRe
- quest, javax.microedition.io.Connector.file.read, javax.microedition.
- io.Connector.file.write, javax.microedition.io.Connector.ssl, javax.m
- icroedition.io.Connector.https, javax.microedition.io.Connector.socke
- t, javax.microedition.io.Connector.serversocket, javax.microedition.m
- edia.Player, javax.microedition.media.Manager, javax.microedition.io.
- PhoneCall, microedition.pim.ContactList.read
-
+MIDlet-Permissions-Opt: javax.microedition.io.Connector.sms, javax.wireless.messaging.sms.send, javax.microedition.midlet.MIDlet.platformRequest, javax.microedition.io.Connector.file.read, javax.microedition.io.Connector.file.write, javax.microedition.io.Connector.ssl, javax.microedition.io.Connector.https, javax.microedition.io.Connector.socket, javax.microedition.io.Connector.serversocket, javax.microedition.media.Player, javax.microedition.media.Manager, javax.microedition.io.PhoneCall, microedition.pim.ContactList.read
