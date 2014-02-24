@@ -44,47 +44,49 @@ public class AndroidInputMethod extends InputMethod {
 	//    buttonPressed(getKeyCode(keyEvent));		
 	//}
 	
-	public void buttonPressed(int keyCode) {
+	public AndroidInputMethod buttonPressed(int keyCode) {
 		if (DeviceFactory.getDevice().hasRepeatEvents() && inputMethodListener == null) {
 			if (repeatModeKeyCode == keyCode) {
 				MIDletAccess ma = MIDletBridge.getMIDletAccess();
 				if (ma == null) {
-					return;
+					return this;
 				}
 				DisplayAccess da = ma.getDisplayAccess();
 				if (da == null) {
-					return;
+					return this;
 				}
 				da.keyRepeated(keyCode);
-				return;
+				return this;
 			} else {
 				repeatModeKeyCode = keyCode;
 			}
 		}
 
 		fireInputMethodListener(keyCode);
+		return this;
 	}
 
 	//public void buttonReleased(KeyEvent keyEvent) {
 	//    buttonReleased(getKeyCode(keyEvent));
 	//}
 	
-	public void buttonReleased(int keyCode) {
+	public AndroidInputMethod buttonReleased(int keyCode) {
 		if (DeviceFactory.getDevice().hasRepeatEvents() && inputMethodListener == null) {
 			repeatModeKeyCode = Integer.MAX_VALUE;
 		}
 		
 		MIDletAccess ma = MIDletBridge.getMIDletAccess();
 		if (ma == null) {
-			return;
+			return this;
 		}
 
 		DisplayAccess da = ma.getDisplayAccess();
 		if (da == null) {
-			return;
+			return this;
 		}
 
 		da.keyReleased(keyCode);
+		return this;
 	}
 	
 	public void pointerPressed(int x, int y) {		

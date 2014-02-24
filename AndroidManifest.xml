@@ -33,14 +33,13 @@
         </activity>
         <!--
         <activity
-            android:name="test.MainActivity"
+            android:name="org.microemu.android.GestureActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:label="Settings"
-            android:theme="@*android:style/Theme"
-            android:windowSoftInputMode="adjustResize" >
+            android:label="Settings">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         -->

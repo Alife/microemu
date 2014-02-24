@@ -30,21 +30,4 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>jsr-120</name>
-			<type>2</type>
-			<location>D:/Java/workspace/microemulator.git/microemulator/microemu-extensions/microemu-jsr-120/src/main/java</location>
-		</link>
-		<link>
-			<name>jsr-82</name>
-			<type>2</type>
-			<location>D:/Java/workspace/microemulator.git/microemulator/microemu-extensions/microemu-jsr-82/src/main/java</location>
-		</link>
-		<link>
-			<name>nokiaui</name>
-			<type>2</type>
-			<location>D:/Java/workspace/microemulator.git/microemulator/microemu-extensions/microemu-nokiaui/src/main/java</location>
-		</link>
-	</linkedResources>
 </projectDescription>

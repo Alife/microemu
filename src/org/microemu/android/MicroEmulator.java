@@ -61,18 +61,21 @@ import org.microemu.log.Logger;
 import org.microemu.util.JadProperties;
 
 import android.content.Context;
-import android.util.Log;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
-import android.view.Window;
-//import android.view.WindowManager;
+import android.view.WindowManager;
+import android.view.View.OnTouchListener;
+import android.view.WindowManager.LayoutParams;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-public class MicroEmulator extends MicroEmulatorActivity {
+public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListener {
 	
 	public static final String LOG_TAG = "MicroEmulator";
 		
@@ -80,122 +83,16 @@ public class MicroEmulator extends MicroEmulatorActivity {
 	
 	private MIDlet midlet;
 	
-	@Override
-	public boolean dispatchKeyEvent(KeyEvent event) {
-		int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
-	            if (ignoreKey(keyCode)) {
-	                return super.dispatchKeyEvent(event);    
-	            }	
-		MIDletAccess ma = MIDletBridge.getMIDletAccess();
-		if (ma == null) {
-			return false;
-		}
-		final DisplayAccess da = ma.getDisplayAccess();
-		if (da == null) {
-			return false;
-		}
-		AndroidDisplayableUI ui = (AndroidDisplayableUI) da.getDisplayableUI(da.getCurrent());
-		if (ui == null) {
-			return false;
-		}		
-		if(keyAction==KeyEvent.ACTION_DOWN)
-		{
-		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			List<AndroidCommandUI> commands = ui.getCommandsUI();
-			
-			CommandUI cmd = getFirstCommandOfType(commands, Command.BACK);
-			if (cmd != null) {
-				if (ui.getCommandListener() != null) {
-					ignoreBackKeyUp = true;
-					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
-				}
-				return true;
-			}
-
-			cmd = getFirstCommandOfType(commands, Command.EXIT);
-			if (cmd != null) {
-				if (ui.getCommandListener() != null) {
-					ignoreBackKeyUp = true;
-					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
-				}
-				return true;
-			}
-			
-			cmd = getFirstCommandOfType(commands, Command.CANCEL);
-			if (cmd != null) {
-				if (ui.getCommandListener() != null) {
-					ignoreBackKeyUp = true;
-					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
-				}
-				return true;
-			}
-		}
-		if (keyCode == KeyEvent.KEYCODE_MENU){
-		//windowFullscreen=false;
-		//getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-			((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);return false;}
-		}
-		
-				
-		switch (keyCode) {
-		case KeyEvent.KEYCODE_DPAD_CENTER :
-			keyCode = -5;
-			break;
-		case KeyEvent.KEYCODE_DPAD_UP :
-			keyCode = -1;
-			break;
-		case KeyEvent.KEYCODE_DPAD_DOWN :
-			keyCode = -2;
-			break;
-		case KeyEvent.KEYCODE_DPAD_LEFT :
-			keyCode = -3;
-			break;
-		case KeyEvent.KEYCODE_DPAD_RIGHT :
-			keyCode = -4;
-			break;
-		case KeyEvent.KEYCODE_DEL :
-			keyCode = 127;
-			break;
-		default: 
-            String ch=event.getCharacters();
-			if(ch!=null){if(ch.length()>0)keyCode=(int)ch.charAt(0);} else{if(unicodeChar!=0)keyCode=unicodeChar;else keyCode=-127-keyCode;}
-	}
-    //if(event.getKeyCode()!=0)Log.d("key pressed", String.valueOf(event.getKeyCode()));
-    //else Log.d("key pressed_", String.valueOf((int)(event.getCharacters().toString().charAt(0))));
-
-	
-		if (ui instanceof AndroidCanvasUI) {
-               
-
-			Device device = DeviceFactory.getDevice();
-			if(keyAction==KeyEvent.ACTION_DOWN)((AndroidInputMethod) device.getInputMethod()).buttonPressed(keyCode);
-			else if(keyAction==KeyEvent.ACTION_UP)((AndroidInputMethod) device.getInputMethod()).buttonReleased(keyCode);
-			else {
-				((AndroidInputMethod) device.getInputMethod()).buttonPressed(keyCode);
-				((AndroidInputMethod) device.getInputMethod()).buttonReleased(keyCode);
-				// support Chinese word
-				if(event.getCharacters().length()>1){
-					for (int i = 1; i < event.getCharacters().length(); i++) {
-						int j = event.getCharacters().charAt(i);
-						((AndroidInputMethod) device.getInputMethod()).buttonPressed(j);
-						((AndroidInputMethod) device.getInputMethod()).buttonReleased(j);
-					}
-				}
-			}
-
-			return true;
-		}
-
-    return super.dispatchKeyEvent(event);
-}
-
+	MIDletAccess ma;
+	DisplayAccess da;
+	AndroidDisplayableUI ui;
 
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
         
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		//requestWindowFeature(Window.FEATURE_NO_TITLE);
 		
         Logger.removeAllAppenders();
         Logger.setLocationEnabled(false);
@@ -292,7 +189,7 @@ public class MicroEmulator extends MicroEmulatorActivity {
         
         common.setSuiteName(midletClassName);
         midlet = common.initMIDlet(false);
-        
+
     }
     @Override
     protected void onPause() {
@@ -311,7 +208,13 @@ public class MicroEmulator extends MicroEmulatorActivity {
         }
     }
 
-    @Override
+	@Override
+	public void setContentView(View view) {
+		super.setContentView(view);
+		view.setOnTouchListener(this);
+	}
+
+	@Override
     protected void onResume() {
         super.onResume();
         
@@ -347,6 +250,103 @@ public class MicroEmulator extends MicroEmulatorActivity {
     }
 
     private boolean ignoreBackKeyUp = false;
+	@Override
+	public boolean dispatchKeyEvent(KeyEvent event) {
+		int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
+        if (ignoreKey(keyCode)) {return super.dispatchKeyEvent(event);}	
+        MIDletAccess ma = MIDletBridge.getMIDletAccess();
+		if (ma == null) {return false;}
+		final DisplayAccess da = ma.getDisplayAccess();
+		if (da == null) {return false;}
+		AndroidDisplayableUI ui = (AndroidDisplayableUI) da.getDisplayableUI(da.getCurrent());
+		if (ui == null) {return false;}
+		if(keyAction==KeyEvent.ACTION_DOWN)
+		{
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			List<AndroidCommandUI> commands = ui.getCommandsUI();
+			
+			CommandUI cmd = getFirstCommandOfType(commands, Command.BACK);
+			if (cmd != null) {
+				if (ui.getCommandListener() != null) {
+					ignoreBackKeyUp = true;
+					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+				}
+				return true;
+			}
+
+			cmd = getFirstCommandOfType(commands, Command.EXIT);
+			if (cmd != null) {
+				if (ui.getCommandListener() != null) {
+					ignoreBackKeyUp = true;
+					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+				}
+				return true;
+			}
+			
+			cmd = getFirstCommandOfType(commands, Command.CANCEL);
+			if (cmd != null) {
+				if (ui.getCommandListener() != null) {
+					ignoreBackKeyUp = true;
+					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+				}
+				return true;
+			}
+		}
+		if (keyCode == KeyEvent.KEYCODE_MENU){
+		//windowFullscreen=false;
+		//getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);return false;}
+		}
+				
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_DPAD_CENTER :
+			keyCode = -5;
+			break;
+		case KeyEvent.KEYCODE_DPAD_UP :
+			keyCode = -1;
+			break;
+		case KeyEvent.KEYCODE_DPAD_DOWN :
+			keyCode = -2;
+			break;
+		case KeyEvent.KEYCODE_DPAD_LEFT :
+			keyCode = -3;
+			break;
+		case KeyEvent.KEYCODE_DPAD_RIGHT :
+			keyCode = -4;
+			break;
+		case KeyEvent.KEYCODE_DEL :
+			keyCode = 127;
+			break;
+		default: 
+            String ch=event.getCharacters();
+			if(ch!=null){if(ch.length()>0)keyCode=(int)ch.charAt(0);} else{if(unicodeChar!=0)keyCode=unicodeChar;else keyCode=-127-keyCode;}
+		}
+	    //if(event.getKeyCode()!=0)Log.d("key pressed", String.valueOf(event.getKeyCode()));
+	    //else Log.d("key pressed_", String.valueOf((int)(event.getCharacters().toString().charAt(0))));
+	
+		//Log.i(LOG_TAG, "keyAction: "+keyAction+"keyCode: "+keyCode+"Char: "+event.getCharacters());
+		if (ui instanceof AndroidCanvasUI) {
+			Device device = DeviceFactory.getDevice();
+			AndroidInputMethod inputMethod = (AndroidInputMethod) device.getInputMethod();
+			if(keyAction==KeyEvent.ACTION_DOWN)inputMethod.buttonPressed(keyCode);
+			else if(keyAction==KeyEvent.ACTION_UP)inputMethod.buttonReleased(keyCode);
+			else {
+				inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
+				// support Chinese word
+				if(event.getCharacters().length()>1){
+					for (int i = 1; i < event.getCharacters().length(); i++) {
+						int j = event.getCharacters().charAt(i);
+						inputMethod.buttonPressed(j).buttonReleased(j);
+					}
+				}
+			}
+
+			return true;
+		}
+
+	    return super.dispatchKeyEvent(event);
+	}
+
     /*
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -470,28 +470,17 @@ public class MicroEmulator extends MicroEmulatorActivity {
         }    
     }
 	
-    private final static KeyEvent KEY_RIGHT_DOWN_EVENT = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT);
-    
+    private final static KeyEvent KEY_RIGHT_DOWN_EVENT = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT); 
     private final static KeyEvent KEY_RIGHT_UP_EVENT = new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_RIGHT);
-	
     private final static KeyEvent KEY_LEFT_DOWN_EVENT = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT);
-    	
     private final static KeyEvent KEY_LEFT_UP_EVENT = new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_LEFT);
-
     private final static KeyEvent KEY_DOWN_DOWN_EVENT = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_DOWN);
-    
     private final static KeyEvent KEY_DOWN_UP_EVENT = new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_DOWN);
-    	
     private final static KeyEvent KEY_UP_DOWN_EVENT = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_UP);
-    	
     private final static KeyEvent KEY_UP_UP_EVENT = new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_UP);
-
     private final static float TRACKBALL_THRESHOLD = 0.4f; 
-	
 	private float accumulatedTrackballX = 0;
-	
 	private float accumulatedTrackballY = 0;
-	
 	@Override
 	public boolean onTrackballEvent(MotionEvent event) {
 		if (event.getAction() == MotionEvent.ACTION_MOVE) {
@@ -539,8 +528,8 @@ public class MicroEmulator extends MicroEmulatorActivity {
 		}
 		
 		return super.onTrackballEvent(event);
-	}
-
+	}	
+	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		MIDletAccess ma = MIDletBridge.getMIDletAccess();
@@ -597,5 +586,99 @@ public class MicroEmulator extends MicroEmulatorActivity {
 
 		return false;
 	}
+	
+	class MyGesture extends SimpleOnGestureListener {
+		@Override
+        public boolean onDown(MotionEvent e) {
+            // 触摸屏按下时立刻触发
+            android.util.Log.i(LOG_TAG, "onDown");
+            return false;
+        }
 
+        @Override
+        public void onShowPress(MotionEvent e) {
+            android.util.Log.i(LOG_TAG, "onShowPress");
+            // 短按，触摸屏按下后片刻后抬起，会触发这个手势，如果迅速抬起则不会；强调的是没有松开或者拖动的状态，由一个ACTION_DOWN触发
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent e) {
+            android.util.Log.i(LOG_TAG, "onSingleTapUp");
+            // 抬起，手指离开触摸屏时触发(长按、滚动、滑动时，不会触发这个手势)
+            return false;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent e1, MotionEvent e2,
+                float distanceX, float distanceY) {
+            android.util.Log.i(LOG_TAG, "onScroll");
+            // 用户按下触摸屏，并拖动，由1个 ACTION_DOWN, 多个ACTION_MOVE触发
+            return false;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent e) {
+            android.util.Log.i(LOG_TAG, "onLongPress");
+            // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
+        	
+        	post(new Runnable() {
+                public void run() {
+            		windowFullscreen = !windowFullscreen;
+            		
+                    WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+                    LayoutParams params = new WindowManager.LayoutParams();
+            		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
+                    statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
+                    params.x = !windowFullscreen?statusBarHeight:0;
+                    wm.updateViewLayout((View) contentView.getParent().getParent(), params);
+
+                    //android.util.Log.i(LOG_TAG,  params.x+"");
+                }
+            });
+        }
+
+		// 参数解释：
+		// e1：第1个ACTION_DOWN MotionEvent
+		// e2：最后一个ACTION_MOVE MotionEvent
+		// velocityX：X轴上的移动速度，像素/秒
+		// velocityY：Y轴上的移动速度，像素/秒
+		// 触发条件 ： X轴的坐标位移大于FLING_MIN_DISTANCE，
+		// 且移动速度大于FLING_MIN_VELOCITY个像素/秒
+		@Override
+		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
+				float velocityY) {
+            android.util.Log.i(LOG_TAG, "onFling");
+			final int FLING_MIN_DISTANCE = 100;// X或者y轴上移动的距离(像素)
+			final int FLING_MIN_VELOCITY = 200;// x或者y轴上的移动速度(像素/秒)
+
+//			Device device = DeviceFactory.getDevice();
+//			AndroidInputMethod inputMethod = (AndroidInputMethod) device.getInputMethod();
+			KeyEvent event = null;
+		
+			if ((e1.getX() - e2.getX()) > FLING_MIN_DISTANCE
+					&& Math.abs(velocityX) > FLING_MIN_VELOCITY){
+				//Toast.makeText(MicroEmulator.this, "向左滑动", Toast.LENGTH_SHORT).show();
+				event = MicroEmulator.KEY_RIGHT_DOWN_EVENT;
+			}
+			else if ((e2.getX() - e1.getX()) > FLING_MIN_DISTANCE
+					&& Math.abs(velocityX) > FLING_MIN_VELOCITY){
+				//Toast.makeText(MicroEmulator.this, "向右滑动", Toast.LENGTH_SHORT).show();
+				event = MicroEmulator.KEY_DOWN_UP_EVENT;
+			}
+
+			if(event!=null){
+				dispatchKeyEvent(event);
+				//inputMethod.buttonPressed(keycode).buttonReleased(keycode);
+			}
+			return false;
+		}
+	}
+	
+	private GestureDetector gesture=new GestureDetector(new MyGesture ());
+
+	@Override
+	public boolean onTouch(final View paramView, MotionEvent event) {
+		return gesture.onTouchEvent(event);
+	}
+	
 }

@@ -51,9 +51,9 @@ import org.microemu.log.Logger;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -63,6 +63,7 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.Window;
+import android.view.WindowManager.LayoutParams;
 
 
 
@@ -83,6 +84,14 @@ public abstract class MicroEmulatorActivity extends Activity {
 	private ArrayList<ActivityResultListener> activityResultListeners = new ArrayList<ActivityResultListener>();
 	
 	protected EmulatorContext emulatorContext;
+
+	protected int statusBarHeight = 0;
+    int width = 0;
+    int height = 0;
+
+	protected boolean added = false;
+
+	protected Display display;
 	public void setConfig(AndroidConfig config) {
 		MicroEmulatorActivity.config = config;
 	}
@@ -119,21 +128,20 @@ public abstract class MicroEmulatorActivity extends Activity {
 		// Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
 		//TypedArray ta = getTheme().obtainStyledAttributes(new int[] { android.R.attr.windowFullscreen });
 		//windowFullscreen = ta.getBoolean(0, false);
-		    //requestWindowFeature(Window.FEATURE_NO_TITLE);
+		    requestWindowFeature(Window.FEATURE_NO_TITLE);
 			//setTitle("aaa");
-    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
-                           WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		//windowFullscreen=true;
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
+                           WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+		windowFullscreen=true;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-		int statusBarHeight = 0;
 		if (!windowFullscreen) {
-			statusBarHeight = phoneCallIcon.getIntrinsicHeight();
+			statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
 		}
 		
-        Display display = getWindowManager().getDefaultDisplay();
+        display = getWindowManager().getDefaultDisplay();
         
-        final int width = display.getWidth();
-        final int height = display.getHeight();
+        width = display.getWidth();
+        height = display.getHeight();
 
         emulatorContext = new EmulatorContext() {
 
@@ -206,6 +214,11 @@ Log.d("AndroidCanvasUI", "set content view: " + view);
 		super.setContentView(view);
 		
 		contentView = view;
+
+        WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+        LayoutParams params = new WindowManager.LayoutParams();
+        params.x = statusBarHeight;
+        wm.updateViewLayout((View) contentView.getParent().getParent(), params);
 	}
 		
 	@Override
