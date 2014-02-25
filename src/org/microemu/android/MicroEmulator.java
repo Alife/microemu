@@ -588,62 +588,97 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	}
 	
 	class MyGesture extends SimpleOnGestureListener {
+
+        int left, top, right, bottom =0;
+        // 触摸屏按下时立刻触发
 		@Override
         public boolean onDown(MotionEvent e) {
-            // 触摸屏按下时立刻触发
             android.util.Log.i(LOG_TAG, "onDown");
-            return false;
+            return super.onDown(e);
         }
 
+        // 短按，触摸屏按下后片刻后抬起，会触发这个手势，如果迅速抬起则不会；强调的是没有松开或者拖动的状态，由一个ACTION_DOWN触发
         @Override
         public void onShowPress(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onShowPress");
-            // 短按，触摸屏按下后片刻后抬起，会触发这个手势，如果迅速抬起则不会；强调的是没有松开或者拖动的状态，由一个ACTION_DOWN触发
         }
 
+        // 抬起，手指离开触摸屏时触发(长按、滚动、滑动时，不会触发这个手势)
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onSingleTapUp");
-            // 抬起，手指离开触摸屏时触发(长按、滚动、滑动时，不会触发这个手势)
-            return false;
+            return super.onSingleTapUp(e);
         }
 
+        // 用户按下触摸屏，并拖动，由1个 ACTION_DOWN, 多个ACTION_MOVE触发
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2,
                 float distanceX, float distanceY) {
             android.util.Log.i(LOG_TAG, "onScroll");
-            // 用户按下触摸屏，并拖动，由1个 ACTION_DOWN, 多个ACTION_MOVE触发
-            return false;
+            return super.onScroll(e1, e2, distanceX, distanceY);
         }
 
+        // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
         @Override
         public void onLongPress(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onLongPress");
-            // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
+        }
+    
+        // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
+            android.util.Log.i(LOG_TAG, "onDoubleTap");
         	
-        	post(new Runnable() {
-                public void run() {
-            		windowFullscreen = !windowFullscreen;
-            		
-                    WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-                    LayoutParams params = new WindowManager.LayoutParams();
-            		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-                    statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
-                    params.x = !windowFullscreen?statusBarHeight:0;
-                    wm.updateViewLayout((View) contentView.getParent().getParent(), params);
+//            Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
+//            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
+//			View decorView=getWindow().getDecorView();
+//            FrameLayout frameLayout = (FrameLayout) ((ViewGroup)decorView).getChildAt(0);;
+//            CanvasView canvasView = (CanvasView) (frameLayout).getChildAt(0);;
+//
+//            windowFullscreen = !windowFullscreen;
+//            LayoutParams params = null;
+//			if (windowFullscreen) {  
+//            	Toast.makeText(MicroEmulator.this, "full_screen", Toast.LENGTH_SHORT).show();
+//                params  = getWindow().getAttributes();  
+//                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
+//                params.x=0;
+//                getWindow().setAttributes(params);  
+//                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
+//            } else {  
+//            	Toast.makeText(MicroEmulator.this, "exit_full_screen", Toast.LENGTH_SHORT).show();
+//                params = getWindow().getAttributes();  
+//                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+//                params.x=statusBarHeight;
+//                getWindow().setAttributes(params);  
+//                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+//            } 
+			
+    		windowFullscreen = !windowFullscreen;
+    		
+            WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+            LayoutParams params = new WindowManager.LayoutParams();
+    		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
+            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
+            params.x = !windowFullscreen?statusBarHeight:0;
+            wm.updateViewLayout((View) contentView.getParent().getParent(), params);
 
-                    //android.util.Log.i(LOG_TAG,  params.x+"");
+            //android.util.Log.i(LOG_TAG,  params.x+"");
+            post(new Runnable() {
+                public void run() {
                 }
             });
+            
+        	return super.onDoubleTap(e);
         }
 
-		// 参数解释：
+		/** 参数解释：
 		// e1：第1个ACTION_DOWN MotionEvent
 		// e2：最后一个ACTION_MOVE MotionEvent
 		// velocityX：X轴上的移动速度，像素/秒
 		// velocityY：Y轴上的移动速度，像素/秒
 		// 触发条件 ： X轴的坐标位移大于FLING_MIN_DISTANCE，
 		// 且移动速度大于FLING_MIN_VELOCITY个像素/秒
+		*/
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
