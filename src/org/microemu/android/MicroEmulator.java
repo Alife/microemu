@@ -63,6 +63,7 @@ import org.microemu.util.JadProperties;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.KeyEvent;
@@ -75,6 +76,7 @@ import android.view.View.OnTouchListener;
 import android.view.WindowManager.LayoutParams;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Toast;
 public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListener {
 	
 	public static final String LOG_TAG = "MicroEmulator";
@@ -244,9 +246,14 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             }
             
         }).start();
+        
+        if(!isFirstResume&&!windowFullscreen)switchFullscreen();
+    	isFirstResume = false;
+		// if jar already run, let switch quickly
+		sleepTimeOnSwitchScreen = 1;
     }
     
-    protected void initializeExtensions() {
+	protected void initializeExtensions() {
     }
 
     private boolean ignoreBackKeyUp = false;
@@ -629,44 +636,45 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         public boolean onDoubleTap(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onDoubleTap");
         	
-//            Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-//            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
+            Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
+            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
 //			View decorView=getWindow().getDecorView();
 //            FrameLayout frameLayout = (FrameLayout) ((ViewGroup)decorView).getChildAt(0);;
 //            CanvasView canvasView = (CanvasView) (frameLayout).getChildAt(0);;
-//
-//            windowFullscreen = !windowFullscreen;
-//            LayoutParams params = null;
-//			if (windowFullscreen) {  
-//            	Toast.makeText(MicroEmulator.this, "full_screen", Toast.LENGTH_SHORT).show();
-//                params  = getWindow().getAttributes();  
-//                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
-//                params.x=0;
-//                getWindow().setAttributes(params);  
-//                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
-//            } else {  
-//            	Toast.makeText(MicroEmulator.this, "exit_full_screen", Toast.LENGTH_SHORT).show();
-//                params = getWindow().getAttributes();  
-//                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
-//                params.x=statusBarHeight;
-//                getWindow().setAttributes(params);  
-//                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-//            } 
-			
-    		windowFullscreen = !windowFullscreen;
-    		
-            WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-            LayoutParams params = new WindowManager.LayoutParams();
-    		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
-            params.x = !windowFullscreen?statusBarHeight:0;
-            wm.updateViewLayout((View) contentView.getParent().getParent(), params);
 
-            //android.util.Log.i(LOG_TAG,  params.x+"");
-            post(new Runnable() {
-                public void run() {
-                }
-            });
+            windowFullscreen = !windowFullscreen;
+            LayoutParams params = null;
+			if (windowFullscreen) {  
+//            	Toast.makeText(MicroEmulator.this, "full_screen", Toast.LENGTH_SHORT).show();
+                params  = getWindow().getAttributes();  
+                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
+//                params.x=0;
+                getWindow().setAttributes(params);  
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
+            } else {  
+//            	Toast.makeText(MicroEmulator.this, "exit_full_screen", Toast.LENGTH_SHORT).show();
+                params = getWindow().getAttributes();  
+                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+                //params.x=statusBarHeight;
+                getWindow().setAttributes(params);  
+                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+                
+        		switchFullscreen();
+
+            } 
+			
+//            WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+//            LayoutParams params = new WindowManager.LayoutParams();
+//    		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
+//            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
+//            params.x = !windowFullscreen?statusBarHeight:0;
+//            wm.updateViewLayout((View) contentView.getParent().getParent(), params);
+//
+//            //android.util.Log.i(LOG_TAG,  params.x+"");
+//            post(new Runnable() {
+//                public void run() {
+//                }
+//            });
             
         	return super.onDoubleTap(e);
         }

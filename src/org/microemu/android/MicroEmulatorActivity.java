@@ -71,8 +71,6 @@ public abstract class MicroEmulatorActivity extends Activity {
 		
 	public static AndroidConfig config = new AndroidConfig();
 	
-	public boolean windowFullscreen;
-
 	private Handler handler = new Handler();
 	
 	private Thread activityThread;
@@ -85,7 +83,16 @@ public abstract class MicroEmulatorActivity extends Activity {
 	
 	protected EmulatorContext emulatorContext;
 
+	public boolean windowFullscreen = true;
 	protected int statusBarHeight = 0;
+	/**
+	 * thread sleep time on switch screen 
+	 */
+	protected int sleepTimeOnSwitchScreen = 5000;
+	/**
+	 * execute switch screen onResume except first time
+	 */
+	protected boolean isFirstResume = true;
     int width = 0;
     int height = 0;
 
@@ -132,7 +139,7 @@ public abstract class MicroEmulatorActivity extends Activity {
 			//setTitle("aaa");
 //		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
 //                           WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-		windowFullscreen=true;
+//		windowFullscreen=true;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
 		if (!windowFullscreen) {
 			statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
@@ -202,6 +209,12 @@ public abstract class MicroEmulatorActivity extends Activity {
         };
 		
 		activityThread = Thread.currentThread();
+	
+		int currentapiVersion=android.os.Build.VERSION.SDK_INT;
+		// just for first start, this time must greater than the OPM jar loading time on the screen
+		// or switch screen must under the OPM jar loading on the screen
+		if(currentapiVersion<15)sleepTimeOnSwitchScreen = 1000;
+		else sleepTimeOnSwitchScreen = 5000;
 	}
 	
 	public View getContentView() {
@@ -214,12 +227,37 @@ public abstract class MicroEmulatorActivity extends Activity {
 		super.setContentView(view);
 		
 		contentView = view;
-
-        LayoutParams params = new WindowManager.LayoutParams();
-        params.x = statusBarHeight;
-        getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
+		
+		if(!windowFullscreen)switchFullscreen();
 	}
 		
+	/**
+	 * switch full screen and display the status bar
+	 */
+	void switchFullscreen() {
+		new Thread("WindowManager"){
+			@Override
+			public void run() {				
+		        try {
+					Thread.sleep(sleepTimeOnSwitchScreen);
+			        postDelayed(new Runnable() {
+			            public void run() {
+			                LayoutParams params = new WindowManager.LayoutParams();
+			                params.x = statusBarHeight;
+						    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
+			        		Log.d("AndroidCanvasUI", "onDoubleTap: " + statusBarHeight);  
+			            }
+			        },1);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}.start();
+		
+	}
+	
+
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
