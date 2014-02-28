@@ -1,7 +1,7 @@
 <!-- This is temporary build system -->
 <!-- Migration to the maven is planned --> 
 
-<project name="microemu-android" default="package-apk">
+<project name="microemu-android" default="package-apk" basedir=".">
     
     <!-- IMPORTANT TO SET WITH VALID VALUES --> 
 
@@ -10,24 +10,20 @@
     
     <property name="sdk-folder" value="/mnt/app/android-sdk-linux_x86" />
 	<property name="sdk-platform-folder" value="${sdk-folder}/platforms/android-3" />
-    <property name="microemu-cldc.jar" value="microemu-cldc-3.0.0-SNAPSHOT.jar" />
-    <property name="microemu-midp.jar" value="midp.jar" />
-    <property name="microemu-javase.jar" value="microemu-javase-3.0.0-SNAPSHOT.jar" />
-    <property name="microemu-jsr-75.jar" value="microemu-jsr-75.jar" />
 
-    <property name="outdir" value="bin" />
-
+	<property name="library" value="${basedir}/libs" />
+	<property name="outdir" value="${basedir}/bin" />
+	<property name="outdir-gen" value="${basedir}/gen" />
     <!-- Output directories -->
     <property name="outdir-assets" value="${outdir}/assets" />
     <property name="outdir-classes" value="${outdir}/classes" />
-    <property name="outdir-producer" value="${outdir}/producer" />
     <property name="outdir-res" value="${outdir}/res" />
     <property name="outdir-libs" value="${outdir}/libs" />
 
-    <!-- Intermediate files -->
+    <!-- dex files -->
     <property name="dex-file" value="classes.dex" />
     <property name="intermediate-dex" value="${outdir}/${dex-file}" />
-
+    <property name="dex-path" value="${outdir}/${dex-file}" />
     <!-- The final package file to generate -->
     <property name="out-package" value="${outdir}/${midlet.package}" />
 
@@ -83,7 +79,7 @@
 	
 	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
 	    <classpath>
-	        <pathelement location="ant-contrib-1.0b3.jar"/>
+	        <pathelement location="${env.ANT_HOME}/lib/ant-contrib-1.0b3.jar" />
 	    </classpath>
 	</taskdef>
 	
@@ -103,42 +99,15 @@
         <delete dir="${outdir}" />
     </target>
 
-    <target name="check">
-        <available file="${microemu-cldc.jar}" property="microemu-cldc.jar.present"/>
-        <fail unless="microemu-cldc.jar.present" message="microemu-cldc.jar doesn't exist at ${microemu-cldc.jar}"/>
-        
-        <available file="${microemu-midp.jar}" property="microemu-midp.jar.present"/>
-        <fail unless="microemu-midp.jar.present" message="microemu-midp.jar doesn't exist at ${microemu-midp.jar}"/>
-        
-        <available file="${microemu-javase.jar}" property="microemu-javase.jar.present"/>
-        <fail unless="microemu-javase.jar.present" message="microemu-javase.jar doesn't exist at ${microemu-javase.jar}"/>
-
-        <available file="${microemu-jsr-75.jar}" property="microemu-jsr-75.jar.present"/>
-        <fail unless="microemu-jsr-75.jar.present" message="microemu-jsr-75.jar doesn't exist at ${microemu-jsr-75.jar}"/>
-    </target>
 
     <target name="dirs">
         <mkdir dir="${outdir}" />
         <mkdir dir="${outdir-assets}" />
         <mkdir dir="${outdir-classes}" />
-        <mkdir dir="${outdir-producer}" />
         <mkdir dir="${outdir-res}" />
-        <mkdir dir="${outdir-libs}" />
+        <!-- <mkdir dir="${outdir-libs}" /> -->
     </target>
-    
-    <target name="compile-producer" depends="check,dirs">
-        <javac target="1.5" debug="true" extdirs=""
-                srcdir="src"
-                destdir="${outdir-producer}"
-                includes="org/microemu/android/asm/**">
-            <classpath>
-                <pathelement location="${microemu-javase.jar}"/>
-                <pathelement location="asm-3.2.jar"/>
-                <pathelement location="asm-tree-3.2.jar"/>
-            </classpath>
-        </javac>
-    </target>
-	
+    	
     <target name="read-jad">
         <loadjad jad="${midlet.jad}" prefix="jad."/>
     	
@@ -204,57 +173,25 @@
     	        defaultValue="${midlet.class.totrim}" />    	
 	</target>
 	
-    <target name="prepare-jars" depends="compile-producer,read-jad">
-        <java classname="org.microemu.android.asm.AndroidProducer">            
-            <arg value="${midlet.jar}"/>
-            <arg value="${outdir-libs}/midlet.jar"/>
-            <arg value="midlet"/>
-            <classpath>
-                <pathelement path="${outdir-producer}"/>
-                <pathelement location="${microemu-javase.jar}"/>
-                <pathelement location="asm-3.2.jar"/>
-                <pathelement location="asm-tree-3.2.jar"/>
-            </classpath>
-        </java>
-    </target>
-
-    <target name="compile" depends="prepare-jars,package-res">
+    <target name="compile" depends="dirs,read-jad,package-res">
         <javac target="1.5" debug="true" extdirs=""
                 srcdir="src"
                 destdir="${outdir-classes}"
-                bootclasspath="${android-jar}"
-                excludes="org/microemu/android/asm/**">
-            <classpath>
-                <pathelement location="${microemu-cldc.jar}" />
-                <pathelement location="${microemu-midp.jar}" />
-                <pathelement location="${microemu-javase.jar}"/>
+                bootclasspath="${android-jar}">
+			<src path="${outdir-gen}" />
+			<classpath>
+                <fileset dir="${library}" includes="*.jar" /><!-- 第三方jar包需要引用，用于辅助编译 -->
             </classpath>
         </javac>
     </target>
 
     <target name="dex" depends="compile">
-        <basename property="intermediate-dex.base" file="${intermediate-dex}"/>
-        <dirname property="intermediate-dex.dir" file="${intermediate-dex}"/>
-    	<basename property="microemu-cldc.jar.base" file="${microemu-cldc.jar}"/>
-    	<dirname property="microemu-cldc.jar.dir" file="${microemu-cldc.jar}"/>
-        <basename property="microemu-midp.jar.base" file="${microemu-midp.jar}"/>
-        <dirname property="microemu-midp.jar.dir" file="${microemu-midp.jar}"/>
-        <basename property="microemu-javase.jar.base" file="${microemu-javase.jar}"/>
-        <dirname property="microemu-javase.jar.dir" file="${microemu-javase.jar}"/>
-        <basename property="microemu-jsr-75.jar.base" file="${microemu-jsr-75.jar}"/>
-        <dirname property="microemu-jsr-75.jar.dir" file="${microemu-jsr-75.jar}"/>
-        <basename property="prepared.midlet.jar.base" file="${outdir-libs}/midlet.jar"/>
-        <dirname property="prepared.midlet.jar.dir" file="${outdir-libs}/midlet.jar"/>
         <exec executable="${dx}" failonerror="true">
             <arg value="--dex" />
-            <arg value="--output=${intermediate-dex.dir}/${intermediate-dex.base}" />
+            <arg value="--output=${dex-path}" />
             <arg value="--positions=lines" />
-            <arg value="${microemu-cldc.jar.dir}/${microemu-cldc.jar.base}"/>
-            <arg value="${microemu-midp.jar.dir}/${microemu-midp.jar.base}" />
-            <arg value="${microemu-javase.jar.dir}/${microemu-javase.jar.base}"/>
-            <arg value="${microemu-jsr-75.jar.dir}/${microemu-jsr-75.jar.base}"/>
             <arg path="${outdir-classes}" />
-            <arg value="${prepared.midlet.jar.dir}/${prepared.midlet.jar.base}"/>
+            <arg value="${library}" /> <!-- 把libs下所有jar打包 -->
         </exec>
     </target>
     
@@ -299,7 +236,6 @@
     &lt;application android:label="@string/app_name" android:icon="@drawable/app_icon"&gt;
         &lt;activity 
                 android:name="org.microemu.android.MicroEmulator"
-                android:label="Opera Mini Mod"
                 android:theme="@android:style/Theme"
                 android:windowSoftInputMode="adjustResize"
                 android:configChanges="orientation|keyboardHidden"&gt;
@@ -317,9 +253,9 @@
         <exec executable="${aapt}" failonerror="true">
             <arg value="package" />
             <arg value="-f" />
-            <arg value="-m" />
+			<arg value="-m" /><!--m,J,gen表示创建包名的目录和R.java到gen目录下 -->
             <arg value="-J" />
-            <arg value="src" />
+            <arg value="${outdir-gen}" />
             <arg value="-M" />
             <arg value="${outdir}/AndroidManifest.xml" />
             <arg value="-S" />
@@ -329,22 +265,18 @@
             <arg value="-I" />
             <arg value="${android-jar}" />
             <arg value="-F" />
-            <arg value="${out-package}.res" /> <!-- temp name -->
+            <arg value="${out-package}.res" />
         </exec>
     </target>
-
+	
     <target name="package-apk" depends="clean, dex, package-res">
-        <basename property="out-package.base" file="${out-package}"/>
-        <dirname property="out-package.dir" file="${out-package}"/>
-        <basename property="intermediate-dex.base" file="${intermediate-dex}"/>
-        <dirname property="intermediate-dex.dir" file="${intermediate-dex}"/>
         <exec executable="${apk-builder}" failonerror="true">
-            <arg value="${out-package.dir}/${out-package.base}" />
-<!--            <arg value="-u" /> -->
+            <arg value="${out-package}" />
+            <!-- <arg value="-u" /> -->
             <arg value="-z" />
-            <arg value="${out-package.dir}/${out-package.base}.res" /> <!-- temp name -->
+            <arg value="${out-package}.res" />
             <arg value="-f" />
-            <arg value="${intermediate-dex.dir}/${intermediate-dex.base}" />
+            <arg value="${dex-path}" />
         </exec>
     </target>
     
@@ -353,15 +285,6 @@
         <echo>Installing ${out-debug-package} onto default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="install" />
-            <arg value="${out-package}" />
-        </exec>
-    </target>
-
-    <target name="reinstall" depends="package-apk">
-        <echo>Installing ${out-debug-package} onto default emulator...</echo>
-        <exec executable="${adb}" failonerror="true">
-            <arg value="install" />
-            <arg value="-r" />
             <arg value="${out-package}" />
         </exec>
     </target>
