@@ -23,20 +23,20 @@ import android.widget.TextView;
 
 /**
  *@author Himi
- *@ÊäÈë·¨ÊÖÊÆÊ¶±ğ
- *@×¢Òâ: android.gestureÕâ¸öÀàÔÚapi-4(SDK1.6)²Å¿ªÊ¼Ö§³ÖµÄ£¡
- *@ÌáĞÑ£ºÄ¬ÈÏ´æµ½SD¿¨ÖĞ£¬ËùÒÔ±ğÍü¼ÇÔÚAndroidMainfest.xml¼ÓÉÏSD¿¨¶ÁĞ´È¨ÏŞ£¡
+ *@è¾“å…¥æ³•æ‰‹åŠ¿è¯†åˆ«
+ *@æ³¨æ„: android.gestureè¿™ä¸ªç±»åœ¨api-4(SDK1.6)æ‰å¼€å§‹æ”¯æŒçš„ï¼
+ *@æé†’ï¼šé»˜è®¤å­˜åˆ°SDå¡ä¸­ï¼Œæ‰€ä»¥åˆ«å¿˜è®°åœ¨AndroidMainfest.xmlåŠ ä¸ŠSDå¡è¯»å†™æƒé™ï¼
  */
 
 public class GestureActivity extends Activity {
-	private GestureOverlayView gov;// ´´½¨Ò»¸öÊÖĞ´»æÍ¼Çø
-	private Gesture gesture;// ÊÖĞ´ÊµÀı
-	private GestureLibrary gestureLib;//´´½¨Ò»¸öÊÖÊÆ²Ö¿â
+	private GestureOverlayView gov;// åˆ›å»ºä¸€ä¸ªæ‰‹å†™ç»˜å›¾åŒº
+	private Gesture gesture;// æ‰‹å†™å®ä¾‹
+	private GestureLibrary gestureLib;//åˆ›å»ºä¸€ä¸ªæ‰‹åŠ¿ä»“åº“
 	private TextView tv;
 	private EditText et;
-	private String path;//ÊÖÊÆÎÄ¼şÂ·¾¶
+	private String path;//æ‰‹åŠ¿æ–‡ä»¶è·¯å¾„
 	private File file;//
-	Set<String> set = null;//È¡³öËùÓĞÊÖÊÆ
+	Set<String> set = null;//å–å‡ºæ‰€æœ‰æ‰‹åŠ¿
 	Object ob[] = null;
 
 	@Override
@@ -49,39 +49,39 @@ public class GestureActivity extends Activity {
 		tv = (TextView) findViewById(R.id.himi_tv);
 		et = (EditText) findViewById(R.id.himi_edit);
 		gov = (GestureOverlayView) findViewById(R.id.himi_gesture);
-		gov.setGestureStrokeType(GestureOverlayView.GESTURE_STROKE_TYPE_MULTIPLE);//ÉèÖÃ±Ê»®ÀàĞÍ 
-		// GestureOverlayView.GESTURE_STROKE_TYPE_MULTIPLE ÉèÖÃÖ§³Ö¶à±Ê»®
-		// GestureOverlayView.GESTURE_STROKE_TYPE_SINGLE ½öÖ§³Öµ¥Ò»±Ê»®
+		gov.setGestureStrokeType(GestureOverlayView.GESTURE_STROKE_TYPE_MULTIPLE);//è®¾ç½®ç¬”åˆ’ç±»å‹ 
+		// GestureOverlayView.GESTURE_STROKE_TYPE_MULTIPLE è®¾ç½®æ”¯æŒå¤šç¬”åˆ’
+		// GestureOverlayView.GESTURE_STROKE_TYPE_SINGLE ä»…æ”¯æŒå•ä¸€ç¬”åˆ’
 		path = new File(Environment.getExternalStorageDirectory(), "gestures").getAbsolutePath();
-		//µÃµ½Ä¬ÈÏÂ·¾¶ºÍÎÄ¼şÃû/sdcard/gestures
-		file = new File(path);//ÊµÀıgesturesµÄÎÄ¼ş¶ÔÏó
-		gestureLib = GestureLibraries.fromFile(path);//ÊµÀıÊÖÊÆ²Ö¿â
-		set = gestureLib.getGestureEntries();//È¡³öËùÓĞÊÖÊÆ
+		//å¾—åˆ°é»˜è®¤è·¯å¾„å’Œæ–‡ä»¶å/sdcard/gestures
+		file = new File(path);//å®ä¾‹gesturesçš„æ–‡ä»¶å¯¹è±¡
+		gestureLib = GestureLibraries.fromFile(path);//å®ä¾‹æ‰‹åŠ¿ä»“åº“
+		set = gestureLib.getGestureEntries();//å–å‡ºæ‰€æœ‰æ‰‹åŠ¿
 		ob = set.toArray();
 		et.setText(String.valueOf((char)((int)'a'+ob.length)));
-		gov.addOnGestureListener(new OnGestureListener() { // ÕâÀïÊÇ°ó¶¨ÊÖĞ´»æÍ¼Çø
+		gov.addOnGestureListener(new OnGestureListener() { // è¿™é‡Œæ˜¯ç»‘å®šæ‰‹å†™ç»˜å›¾åŒº
 					@Override
-					// ÒÔÏÂ·½·¨ÊÇÄã¸Õ¿ªÊ¼»­ÊÖÊÆµÄÊ±ºò´¥·¢
+					// ä»¥ä¸‹æ–¹æ³•æ˜¯ä½ åˆšå¼€å§‹ç”»æ‰‹åŠ¿çš„æ—¶å€™è§¦å‘
 					public void onGestureStarted(GestureOverlayView overlay, MotionEvent event) {
-						tv.setText("ÇëÄúÔÚ½ô´ÕµÄÊ±¼äÄÚÓÃÒ»±Ê»®À´Íê³ÉÒ»¸öÊÖÊÆ£¡Î÷Î÷~");
+						tv.setText("è¯·æ‚¨åœ¨ç´§å‡‘çš„æ—¶é—´å†…ç”¨ä¸€ç¬”åˆ’æ¥å®Œæˆä¸€ä¸ªæ‰‹åŠ¿ï¼è¥¿è¥¿~");
 					} 
 					@Override
-					// ÒÔÏÂ·½·¨ÊÇµ±ÊÖÊÆÍêÕûĞÎ³ÉµÄÊ±ºò´¥·¢
+					// ä»¥ä¸‹æ–¹æ³•æ˜¯å½“æ‰‹åŠ¿å®Œæ•´å½¢æˆçš„æ—¶å€™è§¦å‘
 					public void onGestureEnded(GestureOverlayView overlay, MotionEvent event) {
-						gesture = overlay.getGesture();// ´Ó»æÍ¼ÇøÈ¡³öĞÎ³ÉµÄÊÖÊÆ
-						if (gesture.getStrokesCount() == 1) {//ÎÒÅĞ¶¨µ±ÓÃ»§ÓÃÁËÁ½±Ê»®
-							//(Ç¿µ÷£ºÈç¹ûÒ»¿ªÊ¼ÉèÖÃÊÖÊÆ±Ê»­ÀàĞÍÊÇµ¥Ò»±Ê»­£¬ÄÇÄãÕâÀïÊ¼ÖÕµÃµ½µÄÖ»ÊÇ1£¡)
-							if (event.getAction() == MotionEvent.ACTION_UP) {//ÅĞ¶¨µÚÁ½±Ê»®Àë¿ªÆÁÄ»
-								//if(gesture.getLength()==100){}//ÕâÀïÊÇÅĞ¶¨³¤¶È´ïµ½100ÏñËØ
+						gesture = overlay.getGesture();// ä»ç»˜å›¾åŒºå–å‡ºå½¢æˆçš„æ‰‹åŠ¿
+						if (gesture.getStrokesCount() == 1) {//æˆ‘åˆ¤å®šå½“ç”¨æˆ·ç”¨äº†ä¸¤ç¬”åˆ’
+							//(å¼ºè°ƒï¼šå¦‚æœä¸€å¼€å§‹è®¾ç½®æ‰‹åŠ¿ç¬”ç”»ç±»å‹æ˜¯å•ä¸€ç¬”ç”»ï¼Œé‚£ä½ è¿™é‡Œå§‹ç»ˆå¾—åˆ°çš„åªæ˜¯1ï¼)
+							if (event.getAction() == MotionEvent.ACTION_UP) {//åˆ¤å®šç¬¬ä¸¤ç¬”åˆ’ç¦»å¼€å±å¹•
+								//if(gesture.getLength()==100){}//è¿™é‡Œæ˜¯åˆ¤å®šé•¿åº¦è¾¾åˆ°100åƒç´ 
 								if (et.getText().toString().equals("")) {
-									tv.setText("ÓÉÓÚÄúÃ»ÓĞÊäÈëÊÖÊÆÃû³Æ£¬so~±£´æÊ§°ÜÀ²~");
+									tv.setText("ç”±äºæ‚¨æ²¡æœ‰è¾“å…¥æ‰‹åŠ¿åç§°ï¼Œso~ä¿å­˜å¤±è´¥å•¦~");
 									et.setText(String.valueOf((char)((int)'a'+ob.length)));
 								}
-								tv.setText("ÕıÔÚ±£´æÊÖÊÆ...");
-								addMyGesture(et.getText().toString(), gesture);//ÎÒ×Ô¼ºĞ´µÄÌí¼ÓÊÖÊÆº¯Êı 
+								tv.setText("æ­£åœ¨ä¿å­˜æ‰‹åŠ¿...");
+								addMyGesture(et.getText().toString(), gesture);//æˆ‘è‡ªå·±å†™çš„æ·»åŠ æ‰‹åŠ¿å‡½æ•° 
 							}
 						} else {
-							tv.setText("ÇëÄúÔÚ½ô´ÕµÄÊ±¼äÄÚÓÃÁ½±Ê»®À´Íê³ÉÒ»¸öÊÖÊÆ£¡Î÷Î÷~");
+							tv.setText("è¯·æ‚¨åœ¨ç´§å‡‘çš„æ—¶é—´å†…ç”¨ä¸¤ç¬”åˆ’æ¥å®Œæˆä¸€ä¸ªæ‰‹åŠ¿ï¼è¥¿è¥¿~");
 						}
 					} 
 					@Override
@@ -91,12 +91,12 @@ public class GestureActivity extends Activity {
 					public void onGesture(GestureOverlayView overlay, MotionEvent event) {
 					}
 				});
-		//----ÕâÀïÊÇÔÚ³ÌĞòÆô¶¯µÄÊ±ºò½øĞĞ±éÀúËùÓĞÊÖÊÆ!------
+		//----è¿™é‡Œæ˜¯åœ¨ç¨‹åºå¯åŠ¨çš„æ—¶å€™è¿›è¡Œéå†æ‰€æœ‰æ‰‹åŠ¿!------
 		if (!gestureLib.load()) {
-			tv.setText("HimiÌáÊ¾£ºÊÖÊÆ³¬¹ı9¸öÎÒ×öÁËÉ¾³ıËùÓĞÊÖÊÆµÄ²Ù×÷£¬ÎªÁË½çÃæÕû½àÒ»Ğ©£¡"
-					+ " ÊäÈë·¨ÊÖÊÆÁ·Ï°~(*^__^*)~ ÎûÎû£¡\n²Ù×÷½éÉÜ£º(»­ÊÖÊÆÎÒÉèÖÃ±ØĞë»­Á½±Ê»®²ÅĞĞÅ¶~)\n1." +
-							"Ìí¼ÓÊÖÊÆ£ºÏÈEditTextÖĞÊäÈëÃû³Æ£¬È»ºóÔÚÆÁÄ»ÉÏ»­³öÊÖÊÆ£¡\n2.Æ¥ÅäÊÖÊÆ£º" 
-					+ "ÔÚEditTextÊäÈë\"himi\",È»ºóÊäÈëÊÖÊÆ¼´¿É£¡ ");
+			tv.setText("Himiæç¤ºï¼šæ‰‹åŠ¿è¶…è¿‡9ä¸ªæˆ‘åšäº†åˆ é™¤æ‰€æœ‰æ‰‹åŠ¿çš„æ“ä½œï¼Œä¸ºäº†ç•Œé¢æ•´æ´ä¸€äº›ï¼"
+					+ " è¾“å…¥æ³•æ‰‹åŠ¿ç»ƒä¹ ~(*^__^*)~ å˜»å˜»ï¼\næ“ä½œä»‹ç»ï¼š(ç”»æ‰‹åŠ¿æˆ‘è®¾ç½®å¿…é¡»ç”»ä¸¤ç¬”åˆ’æ‰è¡Œå“¦~)\n1." +
+							"æ·»åŠ æ‰‹åŠ¿ï¼šå…ˆEditTextä¸­è¾“å…¥åç§°ï¼Œç„¶ååœ¨å±å¹•ä¸Šç”»å‡ºæ‰‹åŠ¿ï¼\n2.åŒ¹é…æ‰‹åŠ¿ï¼š" 
+					+ "åœ¨EditTextè¾“å…¥\"himi\",ç„¶åè¾“å…¥æ‰‹åŠ¿å³å¯ï¼ ");
 		} else {
 			loadAllGesture(set, ob);
 		}
@@ -106,54 +106,54 @@ public class GestureActivity extends Activity {
 		try {
 			String existName = findGesture(gesture);
 			if (existName==null) {
-				// ¹ØÓÚÁ½ÖÖ·½Ê½´´½¨Ä£ÄâÆ÷µÄSDcardÔÚ¡¾Android2DÓÎÏ·¿ª·¢Ö®Ê®¡¿ÓĞÏê½â
-				if (Environment.getExternalStorageState() != null) {// Õâ¸ö·½·¨ÔÚÊÔÌ½ÖÕ¶ËÊÇ·ñÓĞsdcard!
-					if (!file.exists()) {// ÅĞ¶¨ÊÇ·ñÒÑ¾­´æÔÚÊÖÊÆÎÄ¼ş
-						// ²»´æÔÚÎÄ¼şµÄÊ±ºòÎÒÃÇÈ¥Ö±½Ó°ÑÎÒÃÇµÄÊÖÊÆÎÄ¼ş´æÈë
+				// å…³äºä¸¤ç§æ–¹å¼åˆ›å»ºæ¨¡æ‹Ÿå™¨çš„SDcardåœ¨ã€Android2Dæ¸¸æˆå¼€å‘ä¹‹åã€‘æœ‰è¯¦è§£
+				if (Environment.getExternalStorageState() != null) {// è¿™ä¸ªæ–¹æ³•åœ¨è¯•æ¢ç»ˆç«¯æ˜¯å¦æœ‰sdcard!
+					if (!file.exists()) {// åˆ¤å®šæ˜¯å¦å·²ç»å­˜åœ¨æ‰‹åŠ¿æ–‡ä»¶
+						// ä¸å­˜åœ¨æ–‡ä»¶çš„æ—¶å€™æˆ‘ä»¬å»ç›´æ¥æŠŠæˆ‘ä»¬çš„æ‰‹åŠ¿æ–‡ä»¶å­˜å…¥
 						gestureLib.addGesture(name, gesture);
-						if (gestureLib.save()) {////±£´æµ½ÎÄ¼şÖĞ
-							gov.clear(true);//Çå³ı±Ê»­
-							// ×¢Òâ±£´æµÄÂ·¾¶Ä¬ÈÏÊÇ/sdcard/gesture ,so~±ğÍü¼ÇAndroidMainfest.xml¼ÓÉÏ¶ÁĞ´È¨ÏŞ£¡
-							// ÕâÀï±§Ô¹Ò»ÏÂ£¬¿È¿È¡¢ÆäÊµ×òÌì¾ÍÓ¦¸Ã³öÕâÆª²©ÎÄµÄ£¬¾ÍÊÇÒòÎªÕâÀï×ÜÊÇÒì³£,½ñÌì×ĞÏ¸¿´ÁË
-							// ²Å·¢ÏÖ²»ÊÇÃ»Ğ´È¨ÏŞ,¶øÊÇÎÒËäÈ»ÔÚAndroidMainfest.xmlÖĞĞ´ÁËÈ¨ÏŞ£¬µ«ÊÇĞ´´íÁËÎ»ÖÃ..¿ŞËÀ£¡
-							tv.setText("±£´æÊÖÊÆ³É¹¦£¡ÒòÎª²»´æÔÚÊÖÊÆÎÄ¼ş£¬" + "ËùÒÔµÚÒ»´Î±£´æÊÖÊÆ³É¹¦»áÄ¬ÈÏÏÈ´´" +
-									"½¨ÁËÒ»¸öÊÖÊÆÎÄ¼ş£¡È»ºó½«ÊÖÊÆ±£´æµ½ÎÄ¼şÖĞ.");
+						if (gestureLib.save()) {////ä¿å­˜åˆ°æ–‡ä»¶ä¸­
+							gov.clear(true);//æ¸…é™¤ç¬”ç”»
+							// æ³¨æ„ä¿å­˜çš„è·¯å¾„é»˜è®¤æ˜¯/sdcard/gesture ,so~åˆ«å¿˜è®°AndroidMainfest.xmlåŠ ä¸Šè¯»å†™æƒé™ï¼
+							// è¿™é‡ŒæŠ±æ€¨ä¸€ä¸‹ï¼Œå’³å’³ã€å…¶å®æ˜¨å¤©å°±åº”è¯¥å‡ºè¿™ç¯‡åšæ–‡çš„ï¼Œå°±æ˜¯å› ä¸ºè¿™é‡Œæ€»æ˜¯å¼‚å¸¸,ä»Šå¤©ä»”ç»†çœ‹äº†
+							// æ‰å‘ç°ä¸æ˜¯æ²¡å†™æƒé™,è€Œæ˜¯æˆ‘è™½ç„¶åœ¨AndroidMainfest.xmlä¸­å†™äº†æƒé™ï¼Œä½†æ˜¯å†™é”™äº†ä½ç½®..å“­æ­»ï¼
+							tv.setText("ä¿å­˜æ‰‹åŠ¿æˆåŠŸï¼å› ä¸ºä¸å­˜åœ¨æ‰‹åŠ¿æ–‡ä»¶ï¼Œ" + "æ‰€ä»¥ç¬¬ä¸€æ¬¡ä¿å­˜æ‰‹åŠ¿æˆåŠŸä¼šé»˜è®¤å…ˆåˆ›" +
+									"å»ºäº†ä¸€ä¸ªæ‰‹åŠ¿æ–‡ä»¶ï¼ç„¶åå°†æ‰‹åŠ¿ä¿å­˜åˆ°æ–‡ä»¶ä¸­.");
 							et.setText(String.valueOf((char)((int)'a'+ob.length+1)));
 							MySurfaceView.vec.put(name,gesture.toBitmap(100, 100, 12, Color.GREEN));
 						} else {
-							tv.setText("±£´æÊÖÊÆÊ§°Ü£¡");
+							tv.setText("ä¿å­˜æ‰‹åŠ¿å¤±è´¥ï¼");
 						}
-					} else {//µ±´æÔÚ´ËÎÄ¼şµÄÊ±ºòÎÒÃÇĞèÒªÏÈÉ¾³ı´ËÊÖÊÆÈ»ºó°ÑĞÂµÄÊÖÊÆ·ÅÉÏ
-						//¶ÁÈ¡ÒÑ¾­´æÔÚµÄÎÄ¼ş,µÃµ½ÎÄ¼şÖĞµÄËùÓĞÊÖÊÆ
-						if (!gestureLib.load()) {//Èç¹û¶ÁÈ¡Ê§°Ü
-							tv.setText("ÊÖÊÆÎÄ¼ş¶ÁÈ¡Ê§°Ü£¡");
-						} else {//¶ÁÈ¡³É¹¦ 
-							set = gestureLib.getGestureEntries();//È¡³öËùÓĞÊÖÊÆ
+					} else {//å½“å­˜åœ¨æ­¤æ–‡ä»¶çš„æ—¶å€™æˆ‘ä»¬éœ€è¦å…ˆåˆ é™¤æ­¤æ‰‹åŠ¿ç„¶åæŠŠæ–°çš„æ‰‹åŠ¿æ”¾ä¸Š
+						//è¯»å–å·²ç»å­˜åœ¨çš„æ–‡ä»¶,å¾—åˆ°æ–‡ä»¶ä¸­çš„æ‰€æœ‰æ‰‹åŠ¿
+						if (!gestureLib.load()) {//å¦‚æœè¯»å–å¤±è´¥
+							tv.setText("æ‰‹åŠ¿æ–‡ä»¶è¯»å–å¤±è´¥ï¼");
+						} else {//è¯»å–æˆåŠŸ 
+							set = gestureLib.getGestureEntries();//å–å‡ºæ‰€æœ‰æ‰‹åŠ¿
 							ob = set.toArray();
 							if (MySurfaceView.vec.containsKey(name)) {
-								//Èç¹û´Ë±äÁ¿ÎªtrueËµÃ÷ÓĞÏàÍ¬nameµÄÊÖÊÆ
-								gestureLib.removeGesture(name, gesture);//É¾³ıÓëµ±Ç°Ãû×ÖÏàÍ¬µÄÊÖÊÆ
+								//å¦‚æœæ­¤å˜é‡ä¸ºtrueè¯´æ˜æœ‰ç›¸åŒnameçš„æ‰‹åŠ¿
+								gestureLib.removeGesture(name, gesture);//åˆ é™¤ä¸å½“å‰åå­—ç›¸åŒçš„æ‰‹åŠ¿
 								//gestureLib.removeEntry(name);
 								gestureLib.addGesture(name, gesture);
 								MySurfaceView.vec.remove(name);
 							}
 							if (gestureLib.save()) {
-								gov.clear(true);//Çå³ı±Ê»­ 
-								//ÕâÀïÊÇ°ÑÎÒÃÇÃ¿¸öÊÖÊÆµÄÃû×ÖÒ²±£´æÏÂÀ´
+								gov.clear(true);//æ¸…é™¤ç¬”ç”» 
+								//è¿™é‡Œæ˜¯æŠŠæˆ‘ä»¬æ¯ä¸ªæ‰‹åŠ¿çš„åå­—ä¹Ÿä¿å­˜ä¸‹æ¥
 								MySurfaceView.vec.put(name,gesture.toBitmap(100, 100, 12, Color.GREEN));
-								tv.setText("±£´æÊÖÊÆ³É¹¦£¡µ±Ç°ËùÓĞÊÖÊÆÒ»¹²ÓĞ£º" + ob.length + "¸ö");
+								tv.setText("ä¿å­˜æ‰‹åŠ¿æˆåŠŸï¼å½“å‰æ‰€æœ‰æ‰‹åŠ¿ä¸€å…±æœ‰ï¼š" + ob.length + "ä¸ª");
 								et.setText(String.valueOf((char)((int)'a'+ob.length+1)));
 							} else {
-								tv.setText("±£´æÊÖÊÆÊ§°Ü£¡");
+								tv.setText("ä¿å­˜æ‰‹åŠ¿å¤±è´¥ï¼");
 							}
-							////------- --ÒÔÏÂ´úÂëÊÇµ±ÊÖÊÆ³¬¹ı9¸ö¾ÍÈ«²¿Çå¿Õ ²Ù×÷--------
+							////------- --ä»¥ä¸‹ä»£ç æ˜¯å½“æ‰‹åŠ¿è¶…è¿‡9ä¸ªå°±å…¨éƒ¨æ¸…ç©º æ“ä½œ--------
 							if (ob.length > 9) {
-								for (int i = 0; i < ob.length; i++) {//ÕâÀïÊÇ±éÀúÉ¾³ıÊÖÊÆ
+								for (int i = 0; i < ob.length; i++) {//è¿™é‡Œæ˜¯éå†åˆ é™¤æ‰‹åŠ¿
 									gestureLib.removeEntry((String) ob[i]);
 								}
 								gestureLib.save();
-								MySurfaceView.vec.clear();//É¾³ı·ÅÖÃÊÖÊÆÍ¼µÄÈİÆ÷
-								tv.setText("ÊÖÊÆ³¬¹ı9¸ö£¬ÒÑÈ«²¿Çå¿Õ!");
+								MySurfaceView.vec.clear();//åˆ é™¤æ”¾ç½®æ‰‹åŠ¿å›¾çš„å®¹å™¨
+								tv.setText("æ‰‹åŠ¿è¶…è¿‡9ä¸ªï¼Œå·²å…¨éƒ¨æ¸…ç©º!");
 								et.setText("");
 							}
 							ob = null;
@@ -161,22 +161,22 @@ public class GestureActivity extends Activity {
 						}
 					}
 				} else {
-					tv.setText("µ±Ç°Ä£ÄâÆ÷Ã»ÓĞSD¿¨ - -¡£");
+					tv.setText("å½“å‰æ¨¡æ‹Ÿå™¨æ²¡æœ‰SDå¡ - -ã€‚");
 				}
 			}
 		} catch (Exception e) {
-			tv.setText("²Ù×÷Òì³££¡");
+			tv.setText("æ“ä½œå¼‚å¸¸ï¼");
 		}
 	}
 
-	public void loadAllGesture(Set<String> set, Object ob[]) { //±éÀúËùÓĞµÄÊÖÊÆ 
-		if (gestureLib.load()) {//¶ÁÈ¡×îĞÂµÄÊÖÊÆÎÄ¼ş
-			set = gestureLib.getGestureEntries();//È¡³öËùÓĞÊÖÊÆ
+	public void loadAllGesture(Set<String> set, Object ob[]) { //éå†æ‰€æœ‰çš„æ‰‹åŠ¿ 
+		if (gestureLib.load()) {//è¯»å–æœ€æ–°çš„æ‰‹åŠ¿æ–‡ä»¶
+			set = gestureLib.getGestureEntries();//å–å‡ºæ‰€æœ‰æ‰‹åŠ¿
 			ob = set.toArray();
 			for (int i = 0; i < ob.length; i++) {
-//				//°ÑÊÖÊÆ×ª³ÉBitmap
+//				//æŠŠæ‰‹åŠ¿è½¬æˆBitmap
 //				gestureToImage(gestureLib.getGestures((String) ob[i]).get(0));
-//				//ÕâÀïÊÇ°ÑÎÒÃÇÃ¿¸öÊÖÊÆµÄÃû×ÖÒ²±£´æÏÂÀ´
+//				//è¿™é‡Œæ˜¯æŠŠæˆ‘ä»¬æ¯ä¸ªæ‰‹åŠ¿çš„åå­—ä¹Ÿä¿å­˜ä¸‹æ¥
 //				MySurfaceView.vec_string.addElement((String) ob[i]);
 				String name = (String) ob[i];
 				Gesture gesture = gestureLib.getGestures((String) ob[i]).get(0);
@@ -188,38 +188,38 @@ public class GestureActivity extends Activity {
 	public String findGesture(Gesture gesture) {
 		String name=null;
 		try {
-			// ¹ØÓÚÁ½ÖÖ·½Ê½´´½¨Ä£ÄâÆ÷µÄSDcardÔÚ¡¾Android2DÓÎÏ·¿ª·¢Ö®Ê®¡¿ÓĞÏê½â
-			if (Environment.getExternalStorageState() != null) {// Õâ¸ö·½·¨ÔÚÊÔÌ½ÖÕ¶ËÊÇ·ñÓĞsdcard!
-				if (!file.exists()) {// ÅĞ¶¨ÊÇ·ñÒÑ¾­´æÔÚÊÖÊÆÎÄ¼ş
-					tv.setText("Æ¥ÅäÊÖÊÆÊ§°Ü£¬ÒòÎªÊÖÊÆÎÄ¼ş²»´æÔÚ£¡£¡");
+			// å…³äºä¸¤ç§æ–¹å¼åˆ›å»ºæ¨¡æ‹Ÿå™¨çš„SDcardåœ¨ã€Android2Dæ¸¸æˆå¼€å‘ä¹‹åã€‘æœ‰è¯¦è§£
+			if (Environment.getExternalStorageState() != null) {// è¿™ä¸ªæ–¹æ³•åœ¨è¯•æ¢ç»ˆç«¯æ˜¯å¦æœ‰sdcard!
+				if (!file.exists()) {// åˆ¤å®šæ˜¯å¦å·²ç»å­˜åœ¨æ‰‹åŠ¿æ–‡ä»¶
+					tv.setText("åŒ¹é…æ‰‹åŠ¿å¤±è´¥ï¼Œå› ä¸ºæ‰‹åŠ¿æ–‡ä»¶ä¸å­˜åœ¨ï¼ï¼");
 
-				} else {//µ±´æÔÚ´ËÎÄ¼şµÄÊ±ºòÎÒÃÇĞèÒªÏÈÉ¾³ı´ËÊÖÊÆÈ»ºó°ÑĞÂµÄÊÖÊÆ·ÅÉÏ
-					//¶ÁÈ¡ÒÑ¾­´æÔÚµÄÎÄ¼ş,µÃµ½ÎÄ¼şÖĞµÄËùÓĞÊÖÊÆ
-					if (!gestureLib.load()) {//Èç¹û¶ÁÈ¡Ê§°Ü
-						tv.setText("Æ¥ÅäÊÖÊÆÊ§°Ü£¬ÊÖÊÆÎÄ¼ş¶ÁÈ¡Ê§°Ü£¡");
-					} else {//¶ÁÈ¡³É¹¦ 
+				} else {//å½“å­˜åœ¨æ­¤æ–‡ä»¶çš„æ—¶å€™æˆ‘ä»¬éœ€è¦å…ˆåˆ é™¤æ­¤æ‰‹åŠ¿ç„¶åæŠŠæ–°çš„æ‰‹åŠ¿æ”¾ä¸Š
+					//è¯»å–å·²ç»å­˜åœ¨çš„æ–‡ä»¶,å¾—åˆ°æ–‡ä»¶ä¸­çš„æ‰€æœ‰æ‰‹åŠ¿
+					if (!gestureLib.load()) {//å¦‚æœè¯»å–å¤±è´¥
+						tv.setText("åŒ¹é…æ‰‹åŠ¿å¤±è´¥ï¼Œæ‰‹åŠ¿æ–‡ä»¶è¯»å–å¤±è´¥ï¼");
+					} else {//è¯»å–æˆåŠŸ 
 						List<Prediction> predictions = gestureLib.recognize(gesture);
-						//recognize()µÄ·µ»Ø½á¹ûÊÇÒ»¸öprediction¼¯ºÏ£¬
-						//°üº¬ÁËËùÓĞÓëgestureÏàÆ¥ÅäµÄ½á¹û¡£
-						//´ÓÊÖÊÆ¿âÖĞ²éÑ¯Æ¥ÅäµÄÄÚÈİ£¬Æ¥ÅäµÄ½á¹û¿ÉÄÜ°üÀ¨¶à¸öÏàËÆµÄ½á¹û£¬ 
+						//recognize()çš„è¿”å›ç»“æœæ˜¯ä¸€ä¸ªpredictioné›†åˆï¼Œ
+						//åŒ…å«äº†æ‰€æœ‰ä¸gestureç›¸åŒ¹é…çš„ç»“æœã€‚
+						//ä»æ‰‹åŠ¿åº“ä¸­æŸ¥è¯¢åŒ¹é…çš„å†…å®¹ï¼ŒåŒ¹é…çš„ç»“æœå¯èƒ½åŒ…æ‹¬å¤šä¸ªç›¸ä¼¼çš„ç»“æœï¼Œ 
 						if (!predictions.isEmpty()) {
 							Prediction prediction = predictions.get(0);
-							//predictionµÄscoreÊôĞÔ´ú±íÁËÓëÊÖÊÆµÄÏàËÆ³Ì¶È
-							//predictionµÄname´ú±íÊÖÊÆ¶ÔÓ¦µÄÃû³Æ 
-							//predictionµÄscoreÊôĞÔ´ú±íÁËÓëgestureµÃÏàËÆ³Ì¶È£¨Í¨³£Çé¿öÏÂ²»¿¼ÂÇscoreĞ¡ÓÚ1µÄ½á¹û£©¡£ 
+							//predictionçš„scoreå±æ€§ä»£è¡¨äº†ä¸æ‰‹åŠ¿çš„ç›¸ä¼¼ç¨‹åº¦
+							//predictionçš„nameä»£è¡¨æ‰‹åŠ¿å¯¹åº”çš„åç§° 
+							//predictionçš„scoreå±æ€§ä»£è¡¨äº†ä¸gestureå¾—ç›¸ä¼¼ç¨‹åº¦ï¼ˆé€šå¸¸æƒ…å†µä¸‹ä¸è€ƒè™‘scoreå°äº1çš„ç»“æœï¼‰ã€‚ 
 							if (prediction.score >= 1) {
-								tv.setText("µ±Ç°ÄãµÄÊÖÊÆÔÚÊÖÊÆ¿âÖĞÕÒµ½×îÏàËÆµÄÊÖÊÆ£ºname =" + prediction.name);
+								tv.setText("å½“å‰ä½ çš„æ‰‹åŠ¿åœ¨æ‰‹åŠ¿åº“ä¸­æ‰¾åˆ°æœ€ç›¸ä¼¼çš„æ‰‹åŠ¿ï¼šname =" + prediction.name);
 								name=prediction.name;
 							}
 						}
 					}
 				}
 			} else {
-				tv.setText("Æ¥ÅäÊÖÊÆÊ§°Ü£¬,µ±Ç°Ä£ÄâÆ÷Ã»ÓĞSD¿¨ - -¡£");
+				tv.setText("åŒ¹é…æ‰‹åŠ¿å¤±è´¥ï¼Œ,å½“å‰æ¨¡æ‹Ÿå™¨æ²¡æœ‰SDå¡ - -ã€‚");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			tv.setText("ÓÉÓÚ³öÏÖÒì³££¬Æ¥ÅäÊÖÊÆÊ§°ÜÀ²~");
+			tv.setText("ç”±äºå‡ºç°å¼‚å¸¸ï¼ŒåŒ¹é…æ‰‹åŠ¿å¤±è´¥å•¦~");
 		}
 		return name;
 	}

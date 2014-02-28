@@ -597,27 +597,27 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	class MyGesture extends SimpleOnGestureListener {
 
         int left, top, right, bottom =0;
-        // ´¥ÃşÆÁ°´ÏÂÊ±Á¢¿Ì´¥·¢
+        // è§¦æ‘¸å±æŒ‰ä¸‹æ—¶ç«‹åˆ»è§¦å‘
 		@Override
         public boolean onDown(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onDown");
             return super.onDown(e);
         }
 
-        // ¶Ì°´£¬´¥ÃşÆÁ°´ÏÂºóÆ¬¿ÌºóÌ§Æğ£¬»á´¥·¢Õâ¸öÊÖÊÆ£¬Èç¹ûÑ¸ËÙÌ§ÆğÔò²»»á£»Ç¿µ÷µÄÊÇÃ»ÓĞËÉ¿ª»òÕßÍÏ¶¯µÄ×´Ì¬£¬ÓÉÒ»¸öACTION_DOWN´¥·¢
+        // çŸ­æŒ‰ï¼Œè§¦æ‘¸å±æŒ‰ä¸‹åç‰‡åˆ»åæŠ¬èµ·ï¼Œä¼šè§¦å‘è¿™ä¸ªæ‰‹åŠ¿ï¼Œå¦‚æœè¿…é€ŸæŠ¬èµ·åˆ™ä¸ä¼šï¼›å¼ºè°ƒçš„æ˜¯æ²¡æœ‰æ¾å¼€æˆ–è€…æ‹–åŠ¨çš„çŠ¶æ€ï¼Œç”±ä¸€ä¸ªACTION_DOWNè§¦å‘
         @Override
         public void onShowPress(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onShowPress");
         }
 
-        // Ì§Æğ£¬ÊÖÖ¸Àë¿ª´¥ÃşÆÁÊ±´¥·¢(³¤°´¡¢¹ö¶¯¡¢»¬¶¯Ê±£¬²»»á´¥·¢Õâ¸öÊÖÊÆ)
+        // æŠ¬èµ·ï¼Œæ‰‹æŒ‡ç¦»å¼€è§¦æ‘¸å±æ—¶è§¦å‘(é•¿æŒ‰ã€æ»šåŠ¨ã€æ»‘åŠ¨æ—¶ï¼Œä¸ä¼šè§¦å‘è¿™ä¸ªæ‰‹åŠ¿)
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onSingleTapUp");
             return super.onSingleTapUp(e);
         }
 
-        // ÓÃ»§°´ÏÂ´¥ÃşÆÁ£¬²¢ÍÏ¶¯£¬ÓÉ1¸ö ACTION_DOWN, ¶à¸öACTION_MOVE´¥·¢
+        // ç”¨æˆ·æŒ‰ä¸‹è§¦æ‘¸å±ï¼Œå¹¶æ‹–åŠ¨ï¼Œç”±1ä¸ª ACTION_DOWN, å¤šä¸ªACTION_MOVEè§¦å‘
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2,
                 float distanceX, float distanceY) {
@@ -625,13 +625,13 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             return super.onScroll(e1, e2, distanceX, distanceY);
         }
 
-        // ³¤°´£¬´¥ÃşÆÁ°´ÏÂºó¼È²»Ì§ÆğÒ²²»ÒÆ¶¯£¬ÓÉ¶à¸ö ACTION_DOWN´¥·¢
+        // é•¿æŒ‰ï¼Œè§¦æ‘¸å±æŒ‰ä¸‹åæ—¢ä¸æŠ¬èµ·ä¹Ÿä¸ç§»åŠ¨ï¼Œç”±å¤šä¸ª ACTION_DOWNè§¦å‘
         @Override
         public void onLongPress(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onLongPress");
         }
     
-        // ³¤°´£¬´¥ÃşÆÁ°´ÏÂºó¼È²»Ì§ÆğÒ²²»ÒÆ¶¯£¬ÓÉ¶à¸ö ACTION_DOWN´¥·¢
+        // é•¿æŒ‰ï¼Œè§¦æ‘¸å±æŒ‰ä¸‹åæ—¢ä¸æŠ¬èµ·ä¹Ÿä¸ç§»åŠ¨ï¼Œç”±å¤šä¸ª ACTION_DOWNè§¦å‘
         @Override
         public boolean onDoubleTap(MotionEvent e) {
             android.util.Log.i(LOG_TAG, "onDoubleTap");
@@ -679,20 +679,20 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         	return super.onDoubleTap(e);
         }
 
-		/** ²ÎÊı½âÊÍ£º
-		// e1£ºµÚ1¸öACTION_DOWN MotionEvent
-		// e2£º×îºóÒ»¸öACTION_MOVE MotionEvent
-		// velocityX£ºXÖáÉÏµÄÒÆ¶¯ËÙ¶È£¬ÏñËØ/Ãë
-		// velocityY£ºYÖáÉÏµÄÒÆ¶¯ËÙ¶È£¬ÏñËØ/Ãë
-		// ´¥·¢Ìõ¼ş £º XÖáµÄ×ø±êÎ»ÒÆ´óÓÚFLING_MIN_DISTANCE£¬
-		// ÇÒÒÆ¶¯ËÙ¶È´óÓÚFLING_MIN_VELOCITY¸öÏñËØ/Ãë
+		/** å‚æ•°è§£é‡Šï¼š
+		// e1ï¼šç¬¬1ä¸ªACTION_DOWN MotionEvent
+		// e2ï¼šæœ€åä¸€ä¸ªACTION_MOVE MotionEvent
+		// velocityXï¼šXè½´ä¸Šçš„ç§»åŠ¨é€Ÿåº¦ï¼Œåƒç´ /ç§’
+		// velocityYï¼šYè½´ä¸Šçš„ç§»åŠ¨é€Ÿåº¦ï¼Œåƒç´ /ç§’
+		// è§¦å‘æ¡ä»¶ ï¼š Xè½´çš„åæ ‡ä½ç§»å¤§äºFLING_MIN_DISTANCEï¼Œ
+		// ä¸”ç§»åŠ¨é€Ÿåº¦å¤§äºFLING_MIN_VELOCITYä¸ªåƒç´ /ç§’
 		*/
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
             android.util.Log.i(LOG_TAG, "onFling");
-			final int FLING_MIN_DISTANCE = 100;// X»òÕßyÖáÉÏÒÆ¶¯µÄ¾àÀë(ÏñËØ)
-			final int FLING_MIN_VELOCITY = 200;// x»òÕßyÖáÉÏµÄÒÆ¶¯ËÙ¶È(ÏñËØ/Ãë)
+			final int FLING_MIN_DISTANCE = 100;// Xæˆ–è€…yè½´ä¸Šç§»åŠ¨çš„è·ç¦»(åƒç´ )
+			final int FLING_MIN_VELOCITY = 200;// xæˆ–è€…yè½´ä¸Šçš„ç§»åŠ¨é€Ÿåº¦(åƒç´ /ç§’)
 
 //			Device device = DeviceFactory.getDevice();
 //			AndroidInputMethod inputMethod = (AndroidInputMethod) device.getInputMethod();
@@ -700,12 +700,12 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		
 			if ((e1.getX() - e2.getX()) > FLING_MIN_DISTANCE
 					&& Math.abs(velocityX) > FLING_MIN_VELOCITY){
-				//Toast.makeText(MicroEmulator.this, "Ïò×ó»¬¶¯", Toast.LENGTH_SHORT).show();
+				//Toast.makeText(MicroEmulator.this, "å‘å·¦æ»‘åŠ¨", Toast.LENGTH_SHORT).show();
 				event = MicroEmulator.KEY_RIGHT_DOWN_EVENT;
 			}
 			else if ((e2.getX() - e1.getX()) > FLING_MIN_DISTANCE
 					&& Math.abs(velocityX) > FLING_MIN_VELOCITY){
-				//Toast.makeText(MicroEmulator.this, "ÏòÓÒ»¬¶¯", Toast.LENGTH_SHORT).show();
+				//Toast.makeText(MicroEmulator.this, "å‘å³æ»‘åŠ¨", Toast.LENGTH_SHORT).show();
 				event = MicroEmulator.KEY_DOWN_UP_EVENT;
 			}
 

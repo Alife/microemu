@@ -31,7 +31,7 @@ import java.lang.reflect.Field;
 public class Log {
 	
 	public static void i(String tag,Object object){
-        //Ê¹ÓÃ·´Éä¼¼ÊõÍê³É¶ÔÏóÊôĞÔµÄÊä³ö  
+        //ä½¿ç”¨åå°„æŠ€æœ¯å®Œæˆå¯¹è±¡å±æ€§çš„è¾“å‡º  
         Class<?> c = null;  
         c = object.getClass();  
         Field [] fields = c.getDeclaredFields();  
@@ -39,9 +39,9 @@ public class Log {
         for(Field f:fields){  
             f.setAccessible(true);  
         }  
-        //Êä object µÄËùÓĞÊôĞÔ  
+        //è¾“ object çš„æ‰€æœ‰å±æ€§  
         for(Field f:fields){  
-            String field = f.toString().substring(f.toString().lastIndexOf(".")+1);         //È¡³öÊôĞÔÃû³Æ  
+            String field = f.toString().substring(f.toString().lastIndexOf(".")+1);         //å–å‡ºå±æ€§åç§°  
             try {
 				android.util.Log.i(tag, field+": "+f.get(object));
 			} catch (IllegalArgumentException e) {

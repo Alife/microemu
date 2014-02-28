@@ -7,7 +7,9 @@
 
     <property name="midlet.jad" value="opera-mini-4.21.33.jad" /> 
     <property name="midlet.package" value="Mini.apk" />
-    
+	<property name="old_package_name" value="com.opera.mini.mod422" /><!-- 工程中的包名-->
+    <property name="new_package_name" value="org.microemu.android." /><!-- 新的包名 -->
+		
     <property name="sdk-folder" value="/mnt/app/android-sdk-linux_x86" />
 	<property name="sdk-platform-folder" value="${sdk-folder}/platforms/android-3" />
 
@@ -17,7 +19,7 @@
     <!-- Output directories -->
     <property name="outdir-assets" value="${outdir}/assets" />
     <property name="outdir-classes" value="${outdir}/classes" />
-    <property name="outdir-res" value="${outdir}/res" />
+    <property name="outdir-res" value="${basedir}/res" />
     <property name="outdir-libs" value="${outdir}/libs" />
 
     <!-- dex files -->
@@ -97,6 +99,7 @@
     
     <target name="clean">
         <delete dir="${outdir}" />
+        <delete dir="${outdir-gen}" />
     </target>
 
 
@@ -104,7 +107,8 @@
         <mkdir dir="${outdir}" />
         <mkdir dir="${outdir-assets}" />
         <mkdir dir="${outdir-classes}" />
-        <mkdir dir="${outdir-res}" />
+        <!-- <mkdir dir="${outdir-res}" /> -->
+        <mkdir dir="${outdir-gen}" />
         <!-- <mkdir dir="${outdir-libs}" /> -->
     </target>
     	
@@ -171,14 +175,43 @@
                 regexp="^[ \t]+|[ \t]+$"
                 replace=""
     	        defaultValue="${midlet.class.totrim}" />    	
+    	<echo>midlet.class = ${midlet.class}</echo>
 	</target>
 	
-    <target name="compile" depends="dirs,read-jad,package-res">
-        <javac target="1.5" debug="true" extdirs=""
-                srcdir="src"
+    <target name="replaceregexp">
+	<!--这里会把工程下面的一些需要处理的文件，都复制到temp里 -->
+    	<echo>copy src gen AndroidManifest.xml to bin/</echo>
+		<copy todir="${outdir}">
+			<fileset dir="${basedir}" includes="**/src/**"/>
+			<fileset dir="${basedir}" includes="**/gen/**"/>
+			<!-- <fileset dir="${basedir}" includes="*.*"/> -->
+			<fileset dir="${basedir}" includes="AndroidManifest.xml"/>
+		</copy>
+    	<echo>replace package name ${outdir}/AndroidManifest.xml</echo>
+    	<echo>import(.*)${old_package_name}.R => import ${new_package_name}${midlet.class}.R</echo>
+		<replaceregexp flags="g" encoding="UTF-8" byline="true">
+			<regexp pattern="package(.*)${old_package_name}"/>
+			<substitution expression="package=&quot;${new_package_name}${midlet.class}"/>
+			<fileset dir="${outdir}" includes="AndroidManifest.xml"/>
+		</replaceregexp>	 
+    	<echo>replace package name ${outdir}/src/*</echo>
+		<replaceregexp flags="g" encoding="UTF-8" byline="true">
+			<regexp pattern="import(.*)${old_package_name}.R"/>
+			<substitution expression="import ${new_package_name}${midlet.class}.R"/>
+			<fileset dir="${outdir}/src" includes="**/*.java"/>
+			<fileset dir="${outdir}/src" includes="*.java"/>
+		</replaceregexp>
+    </target>
+
+    <target name="compile" depends="dirs,read-jad,replaceregexp,package-res">
+		<echo>${outdir-gen}</echo>
+		<javac target="1.5" debug="true" extdirs=""
+                srcdir="${outdir}/src"
                 destdir="${outdir-classes}"
                 bootclasspath="${android-jar}">
-			<src path="${outdir-gen}" />
+			<!--给编译器指定编码，防止出现："警告： 编码 GBK 的不可映射字符"-->
+			<compilerarg line="-encoding UTF-8"/>
+  			<src path="${outdir-gen}" />
 			<classpath>
                 <fileset dir="${library}" includes="*.jar" /><!-- 第三方jar包需要引用，用于辅助编译 -->
             </classpath>
@@ -225,7 +258,7 @@
     	</unjar>
         <copy file="${outdir}/assets/${midlet.icon}" tofile="${outdir-res}/drawable/app_icon.png" />
         
-        <echo file="${outdir}/AndroidManifest.xml">&lt;?xml version="1.0" encoding="utf-8"?&gt;
+        <!-- <echo file="${outdir}/AndroidManifest.xml">&lt;?xml version="1.0" encoding="utf-8"?&gt;
 &lt;manifest xmlns:android="http://schemas.android.com/apk/res/android"
         package="org.microemu.android.${midlet.class}"&gt;
     &lt;uses-permission android:name="android.permission.INTERNET" /&gt; 
@@ -246,10 +279,11 @@
         &lt;/activity&gt;
     &lt;/application&gt;
 &lt;/manifest&gt;            
-        </echo>
+        </echo> -->
     </target>
     
     <target name="package-res" depends="prepare-assets, prepare-res">
+        <echo>create ${outdir-gen}/${new_package_name}${midlet.class}/R.java</echo>
         <exec executable="${aapt}" failonerror="true">
             <arg value="package" />
             <arg value="-f" />
