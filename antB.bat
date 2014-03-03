@@ -1,15 +1,14 @@
-@call ../.path.bat
+@rem call ../.path.bat
 @set microemulator_dir=microemulator.git\microemulator
 @rem set jarfile=%1 
 @set jarfile=Opera Mini 4.22
-@set jarDir="D:\Java\workspace"
+@set jarDir=D:\Java\workspace\microemu_mod
 @set paras=  
-@rem set paras=%paras% -Dmidlet.jar="%jarfile%.jar"
-@set paras=%paras% -Dprepared.midlet.jar.dir="%jarDir%\"
-@set paras=%paras% -Dmidlet.jar="%jarDir%\%jarfile%.jar"
-@set paras=%paras% -Dmidlet.jad="%jarDir%\%jarfile%.jad" 
-@set paras=%paras% -Dmidlet.package="%jarfile%.apk"
-@set paras=%paras% -Dout-packagee="%jarfile%.apk"
+@rem set paras=%paras% -Dmidlet.jad="%jarDir%\%jarfile%.jad" 
+@rem set paras=%paras% -Dmidlet.jar="%jarDir%\%jarfile%.jar" 
+@set paras=%paras% -Dmidlet.jar=%1 
+@rem set paras=%paras% -Dmidlet.package="%jarfile%.apk"
+@rem set paras=%paras% -Dout-packagee="%jarfile%.apk"
 @set paras=%paras% -Dsdk-folder=%sdk-folder%
 @set paras=%paras% -Dandroid-jar=%sdk-platform-folder%/android.jar
 @set paras=%paras% -Dsdk-platform-folder=%sdk-platform-folder%
@@ -23,7 +22,7 @@
 @rem set paras=%paras% -Doutdir=%cd%\%microemulator_dir%\microemu-android\bin
 @echo %paras%
 @rem ant -buildfile D:\Java\workspace\microemulator.git\microemulator\microemu-android\build.xml %1 %paras%
-@ant -buildfile build.xml %1 %paras%
+@ant -buildfile build.xml %paras%
 @rem ant -buildfile build.apk.xml %1 %paras%
 
 rem        <basename property="prepared.midlet.jar.base" file="${midlet.jar}"/>

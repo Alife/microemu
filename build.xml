@@ -1,12 +1,13 @@
 <!-- This is temporary build system -->
 <!-- Migration to the maven is planned --> 
 
-<project name="microemu-android" default="package-apk" basedir=".">
+<project name="microemu-mod" default="package-apk" basedir=".">
     
     <!-- IMPORTANT TO SET WITH VALID VALUES --> 
 
-    <property name="midlet.jad" value="opera-mini-4.21.33.jad" /> 
+    <property name="midlet.jar" value="opera-mini-4.21.33.jar" /> 
     <property name="midlet.package" value="Mini.apk" />
+    <property name="midlet.jar" value="opera-mini-4.21.33.jar" /> 
 	<property name="old_package_name" value="com.opera.mini.mod422" /><!-- 工程中的包名-->
     <property name="new_package_name" value="org.microemu.android." /><!-- 新的包名 -->
 		
@@ -19,7 +20,7 @@
     <!-- Output directories -->
     <property name="outdir-assets" value="${outdir}/assets" />
     <property name="outdir-classes" value="${outdir}/classes" />
-    <property name="outdir-res" value="${basedir}/res" />
+    <property name="outdir-res" value="${outdir}/res" />
     <property name="outdir-libs" value="${outdir}/libs" />
 
     <!-- dex files -->
@@ -27,7 +28,7 @@
     <property name="intermediate-dex" value="${outdir}/${dex-file}" />
     <property name="dex-path" value="${outdir}/${dex-file}" />
     <!-- The final package file to generate -->
-    <property name="out-package" value="${outdir}/${midlet.package}" />
+    <!-- <property name="out-package" value="${outdir}/${midlet.package}" /> -->
 
     <!-- Tools -->
     <property name="sdk-platform-tools" value="${sdk-folder}/platform-tools" />
@@ -102,7 +103,6 @@
         <delete dir="${outdir-gen}" />
     </target>
 
-
     <target name="dirs">
         <mkdir dir="${outdir}" />
         <mkdir dir="${outdir-assets}" />
@@ -110,28 +110,24 @@
         <!-- <mkdir dir="${outdir-res}" /> -->
         <mkdir dir="${outdir-gen}" />
         <!-- <mkdir dir="${outdir-libs}" /> -->
+
+		<propertyregex property="out-package" input="${midlet.jar}" regexp='.jar' replace=".apk"/>
+    	<echo>midlet.jar ${midlet.jar}</echo>
+    	<echo>out-package ${out-package}</echo>
     </target>
     	
     <target name="read-jad">
-        <loadjad jad="${midlet.jad}" prefix="jad."/>
+        <unzip src="${midlet.jar}" dest="${outdir-assets}">
+            <patternset>
+                <include name="META-INF/MANIFEST.MF"/>
+    	        <include name="${midlet.icon}"/>
+    	    </patternset>
+        </unzip>
+        <move file="${outdir-assets}/META-INF/MANIFEST.MF" tofile="${outdir-assets}/MANIFEST.jad" />
+        <loadjad jad="${outdir-assets}/MANIFEST.jad" prefix="jad."/>
     	
-        <basename file="${midlet.jad}" property="midlet.jad.basename"/>
+        <basename file="${outdir-assets}/MANIFEST.jad" property="midlet.jad.basename"/>
     	
-        <propertyregex property="jar.first.character" 
-                input="${jad.MIDlet-Jar-URL}"
-                regexp="^\/"
-                select="\0" />
-    	<if>
-    	    <equals arg1="${jar.first.character}" arg2="/" />
-    		<then>
-    			<property name="midlet.jar" value="${jad.MIDlet-Jar-URL}" />
-    		</then>
-    		<else>
-    			<dirname property="midlet.jad.dir" file="${midlet.jad}"/>
-    			<property name="midlet.jar" value="${midlet.jad.dir}/${jad.MIDlet-Jar-URL}" />
-    		</else>
-    	</if>    		
-
         <propertyregex property="midlet.name" 
                 input="${jad.MIDlet-1}"
                 regexp="([^,]+),([^,]+),([^,]+)"
@@ -177,13 +173,14 @@
     	        defaultValue="${midlet.class.totrim}" />    	
     	<echo>midlet.class = ${midlet.class}</echo>
 	</target>
-	
+
     <target name="replaceregexp">
 	<!--这里会把工程下面的一些需要处理的文件，都复制到temp里 -->
     	<echo>copy src gen AndroidManifest.xml to bin/</echo>
 		<copy todir="${outdir}">
 			<fileset dir="${basedir}" includes="**/src/**"/>
 			<fileset dir="${basedir}" includes="**/gen/**"/>
+			<fileset dir="${basedir}" includes="**/res/**"/>
 			<!-- <fileset dir="${basedir}" includes="*.*"/> -->
 			<fileset dir="${basedir}" includes="AndroidManifest.xml"/>
 		</copy>
@@ -225,6 +222,7 @@
             <arg value="--positions=lines" />
             <arg path="${outdir-classes}" />
             <arg value="${library}" /> <!-- 把libs下所有jar打包 -->
+            <arg value="${midlet.jar}" />
         </exec>
     </target>
     
@@ -237,7 +235,6 @@
                 <exclude name="**/MANIFEST.MF"/>
             </patternset>
         </unzip>
-        <copy file="${midlet.jad}" tofile="${outdir-assets}/${midlet.jad.basename}" />
     </target>
     
     <target name="prepare-res" depends="read-jad">
@@ -251,11 +248,15 @@
         </echo>
         
         <mkdir dir="${outdir-res}/drawable" />
-    	<unjar src="${midlet.jar}" dest="${outdir}">
+    	<!-- <unjar src="${midlet.jar}" dest="${outdir}/assets/">
     	    <patternset>
     	        <include name="${midlet.icon}"/>
     	    </patternset>
-    	</unjar>
+    	</unjar> -->
+		<copy todir="${outdir}">
+			<fileset dir="${outdir-assets}" includes="*.*"/>
+			<fileset dir="${outdir-assets}" includes="*"/>
+		</copy>
         <copy file="${outdir}/assets/${midlet.icon}" tofile="${outdir-res}/drawable/app_icon.png" />
         
         <!-- <echo file="${outdir}/AndroidManifest.xml">&lt;?xml version="1.0" encoding="utf-8"?&gt;
@@ -283,7 +284,6 @@
     </target>
     
     <target name="package-res" depends="prepare-assets, prepare-res">
-        <echo>create ${outdir-gen}/${new_package_name}${midlet.class}/R.java</echo>
         <exec executable="${aapt}" failonerror="true">
             <arg value="package" />
             <arg value="-f" />
@@ -312,11 +312,12 @@
             <arg value="-f" />
             <arg value="${dex-path}" />
         </exec>
+        <delete file="${out-package}.res" />
     </target>
     
     <!-- Install the package on the default emulator -->
     <target name="install" depends="package-apk">
-        <echo>Installing ${out-debug-package} onto default emulator...</echo>
+        <echo>Installing ${out-package} onto default emulator...</echo>
         <exec executable="${adb}" failonerror="true">
             <arg value="install" />
             <arg value="${out-package}" />
