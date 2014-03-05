@@ -1,4 +1,4 @@
-@rem call ../.path.bat
+@if not defined Java_Home call ../.path.bat
 @set microemulator_dir=microemulator.git\microemulator
 @rem set jarfile=%1 
 @set jarfile=Opera Mini 4.22
@@ -20,9 +20,9 @@
 @set paras=%paras% -Dmicroemu-jsr-75.jar=libs\microemu-jsr-75.jar
 @rem set paras=%paras% -Dasm.jar=%cd%/asm-3.2.jar
 @rem set paras=%paras% -Doutdir=%cd%\%microemulator_dir%\microemu-android\bin
-@echo %paras%
+@rem echo %paras%
 @rem ant -buildfile D:\Java\workspace\microemulator.git\microemulator\microemu-android\build.xml %1 %paras%
-@ant -buildfile build.xml %paras%
+@ant -buildfile build.xml %2 %paras%
 @rem ant -buildfile build.apk.xml %1 %paras%
 
 rem        <basename property="prepared.midlet.jar.base" file="${midlet.jar}"/>

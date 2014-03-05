@@ -1,7 +1,7 @@
 <!-- This is temporary build system -->
 <!-- Migration to the maven is planned --> 
 
-<project name="microemu-mod" default="package-apk" basedir=".">
+<project name="microemu-mod" default="detectFile" basedir=".">
     
     <!-- IMPORTANT TO SET WITH VALID VALUES --> 
 
@@ -97,7 +97,7 @@
             </loadproperties>
         </sequential>		
     </macrodef>
-    
+
     <target name="clean">
         <delete dir="${outdir}" />
         <delete dir="${outdir-gen}" />
@@ -110,10 +110,6 @@
         <!-- <mkdir dir="${outdir-res}" /> -->
         <mkdir dir="${outdir-gen}" />
         <!-- <mkdir dir="${outdir-libs}" /> -->
-
-		<propertyregex property="out-package" input="${midlet.jar}" regexp='.jar' replace=".apk"/>
-    	<echo>midlet.jar ${midlet.jar}</echo>
-    	<echo>out-package ${out-package}</echo>
     </target>
     	
     <target name="read-jad">
@@ -124,6 +120,12 @@
     	    </patternset>
         </unzip>
         <move file="${outdir-assets}/META-INF/MANIFEST.MF" tofile="${outdir-assets}/MANIFEST.jad" />
+        <!-- <exec executable="native2ascii" failonerror="true">
+            <arg value="-encoding" />
+            <arg value="GBK" />
+            <arg value="${outdir-assets}/META-INF/MANIFEST.MF" />
+            <arg value="${outdir-assets}/MANIFEST.jad" />
+        </exec> -->
         <loadjad jad="${outdir-assets}/MANIFEST.jad" prefix="jad."/>
     	
         <basename file="${outdir-assets}/MANIFEST.jad" property="midlet.jad.basename"/>
@@ -303,6 +305,35 @@
         </exec>
     </target>
 	
+	<target name="detectFile">   
+		<!-- <property name="jarFileIsExists" value="false" />
+		<property name="apkFileIsExists" value="false" /> -->
+		<propertyregex property="out-package" input="${midlet.jar}" regexp='.jar' replace=".apk"/>
+		<condition property="apkFileIsExists"   >   
+			<and><available file="${out-package}"/></and>   
+		</condition> 
+		<condition property="jarFileIsExists"   >   
+			<and><available file="${midlet.jar}"/></and>   
+		</condition> 
+        <echo>${out-package} ${apkFileIsExists}</echo>
+        <echo>${midlet.jar} ${jarFileIsExists}</echo>
+        <antcall target="apkFileIsExistsTrue"></antcall>        
+        <antcall target="apkFileIsExistsFalse"></antcall>        
+     </target>
+     <target name="apkFileIsExistsTrue" if="apkFileIsExists" >
+        <echo>${out-package} already exists</echo>
+     </target>
+     <target name="apkFileIsExistsFalse" unless="apkFileIsExists" >
+        <antcall target="jarFileIsExistsTrue" />
+        <antcall target="jarFileIsExistsFalse" />
+     </target>
+     <target name="jarFileIsExistsTrue" if="jarFileIsExists" >
+        <antcall target="package-apk" />
+     </target>
+     <target name="jarFileIsExistsFalse" unless="jarFileIsExists" >
+        <echo>${midlet.jar} not exists</echo>
+     </target>
+
     <target name="package-apk" depends="clean, dex, package-res">
         <exec executable="${apk-builder}" failonerror="true">
             <arg value="${out-package}" />
