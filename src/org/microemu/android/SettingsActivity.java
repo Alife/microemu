@@ -1,60 +1,149 @@
 package org.microemu.android;
 
 import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.Date;
 
-import android.app.Activity;
+import org.microemu.android.annotation.DisableView;
+import org.microemu.android.annotation.Entries;
+import org.microemu.android.annotation.Summary;
+import org.microemu.android.annotation.Title;
+import org.microemu.android.util.Tools;
+
+import com.opera.mini.mod422.R;
+
+import android.R.bool;
+import android.R.string;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
+import android.preference.ListPreference;
+import android.preference.Preference;
+import android.preference.Preference.OnPreferenceChangeListener;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.preference.PreferenceScreen;
+import android.util.Log;
+import android.view.MenuItem;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.widget.Toast;
 
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends PreferenceActivity {
 	RelativeLayout panel;
 	SharedPreferences prefs;
+	PreferenceScreen preferenceScreen;
 
 	public void onCreate(Bundle paramBundle) {
 		super.onCreate(paramBundle);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		panel = new RelativeLayout(this);
-		setContentView(panel);
-		LinearLayout localLinearLayout = new LinearLayout(this);
-		localLinearLayout.setOrientation(1);
-		panel.addView(localLinearLayout,new RelativeLayout.LayoutParams(-2, -2));
-		TextView localTextView = new TextView(this);
-		localTextView.setText("\u0420\u0430\u0437\u043C\u0435\u0440\u044B \u0448\u0440\u0438\u0444\u0442\u043E\u0432:");
-		localLinearLayout.addView(localTextView);
+		addPreferencesFromResource(R.xml.settings);
+		preferenceScreen = getPreferenceScreen();
+		preferenceScreen.removeAll();
 		
-		final EditText localEditText1 = new EditText(this);
-		localEditText1.setText(String.valueOf(prefs.getInt("smallSize", 12)));
-		localLinearLayout.addView(localEditText1);
-		
-		final EditText localEditText2 = new EditText(this);
-		localEditText2.setText(String.valueOf(prefs.getInt("mediumSize", 16)));
-		localLinearLayout.addView(localEditText2);
-		
-		final EditText localEditText3 = new EditText(this);
-		localEditText3.setText(String.valueOf(prefs.getInt("largeSize", 20)));
-		localLinearLayout.addView(localEditText3);
-		
-		Button localButton = new Button(this);
-		localButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View paramAnonymousView) {
-				SharedPreferences.Editor localEditor = prefs.edit();
-				try {
-					localEditor.putInt("smallSize",Integer.decode(localEditText1.getText().toString()).intValue());
-					localEditor.putInt("mediumSize",Integer.decode(localEditText2.getText().toString()).intValue());
-					localEditor.putInt("largeSize",Integer.decode(localEditText3.getText().toString()).intValue());
-					localEditor.commit();
-				} catch (Exception localException) {
+		AddPreference(new AndroidConfig());
+	}
+	
+	public <T> void AddPreference(T t) {
+		Class<?> clazz = t.getClass();
+		Field[] fields = clazz .getFields();
+		PreferenceCategory category = new PreferenceCategory(this);
+		preferenceScreen.addPreference(category);
+		String title = Tools.getName(clazz);
+		Title titleAnn = clazz.getAnnotation(Title.class);
+		if(titleAnn!=null)title=titleAnn.value();
+		category.setTitle(title );
+		for (Field field : fields) {
+			DisableView disEnabled = field.getAnnotation(DisableView.class);
+			if(disEnabled!=null)continue;
+			String fieldName=field.getName(); 
+			Object defaultValue = null;
+			Class<?> type = field.getType(); 
+			try {
+				Preference preference = null;
+				defaultValue=field.get(t);
+				if(type.getPackage()!=null&&!type.getPackage().getName().startsWith("java.lang"))
+					AddPreference(defaultValue);
+				Entries entries = field.getAnnotation(Entries.class);
+				if(entries==null){
+					if(defaultValue instanceof String){
+						preference = new EditTextPreference(this);
+						((EditTextPreference) preference).setText(defaultValue.toString());
+					}else if(type.equals(int.class)||type.equals(byte.class)){
+						preference = new EditTextPreference(this);
+						((EditTextPreference) preference).setText(defaultValue.toString());
+					}else if(type.equals(Integer.class)||type.equals(Byte.class)){
+						preference = new EditTextPreference(this);
+						((EditTextPreference) preference).setText(defaultValue.toString());
+					}else if(type.equals(boolean.class)){
+						preference = new CheckBoxPreference(this);
+						((CheckBoxPreference) preference).setChecked((Boolean)defaultValue);
+					}else if(type.equals(Boolean.class)){
+						preference = new CheckBoxPreference(this);
+						((CheckBoxPreference) preference).setChecked((Boolean)defaultValue);
+					}else if(type.equals(Date.class)){
+						preference = new EditTextPreference(this);
+						((EditTextPreference) preference).setText(defaultValue.toString());
+					}else if(type.equals(Float.class)||type.equals(float.class)){
+						preference = new EditTextPreference(this);
+						((EditTextPreference) preference).setText(defaultValue.toString());
+					}else if(type.equals(Double.class)||type.equals(double.class)){
+						preference = new EditTextPreference(this);
+						((EditTextPreference) preference).setText(defaultValue.toString());
+					}else continue;
 				}
-			}
-		});
-		localButton.setText("Save");
-		localLinearLayout.addView(localButton);
+				else {
+					preference = new ListPreference(this);
+					((ListPreference) preference).setEntries(entries.names());
+					((ListPreference) preference).setEntryValues(Tools.Ints2Strings(entries.value()));
+					if(Arrays.binarySearch(Tools.Ints2Strings(entries.value()), defaultValue.toString())<0)
+						((ListPreference) preference).setValueIndex(0);
+					else ((ListPreference) preference).setValueIndex(
+							Tools.getIndex(entries.value(),Integer.parseInt(defaultValue.toString())));
+				}
+				
+				preference.setKey(fieldName);
+				titleAnn = field.getAnnotation(Title.class);
+				if(titleAnn!=null)title=titleAnn.value();
+				else title = fieldName;
+				preference.setTitle(title);
+				String summary = "默认为 ";
+				//if(entries!=null)defaultValue = entries.value()[(Integer)defaultValue];
+				summary += defaultValue;
+				Summary summaryAnn = field.getAnnotation(Summary.class);
+				if(summaryAnn!=null)summary=summaryAnn.value() +" "+summary;
+				summary=summary+" 当前为 "+prefs.getAll().get(fieldName);
+				preference.setSummary(summary);
+				category.addPreference(preference);
+				
+				preference.setOnPreferenceChangeListener(new OnPreferenceChangeListener(){
+
+					@Override
+					public boolean onPreferenceChange(
+							Preference preference, Object paramObject) {
+						String summary = (String) preference.getSummary();
+						summary = summary.substring(0,summary.indexOf("当前为")+3)+" "+paramObject;
+						preference.setSummary(summary);
+						//如果返回false表示不允许被改变  true表示允许改变
+						return true;
+					}});
+			} catch (Exception e) {
+				Log.i(MicroEmulator.LOG_TAG, fieldName+" "+defaultValue+" "+title+" "+type+" "+e.getMessage());
+				//e.printStackTrace();
+			}     
+		}
+	}
+
+	@Override
+	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
+			Preference preference) {
+		super.onPreferenceTreeClick(preferenceScreen, preference);
+		String text = " key "+preference.getKey();
+		text += " isEnabled "+preference.isEnabled();
+		//Toast.makeText(this,text, Toast.LENGTH_SHORT).show();
+
+		return super.onPreferenceTreeClick(preferenceScreen, preference);
 	}
 }

@@ -1,4 +1,4 @@
-package android.view;
+package org.microemu.android.view;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;

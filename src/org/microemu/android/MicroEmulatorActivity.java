@@ -28,21 +28,20 @@ package org.microemu.android;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 
 import javax.microedition.io.ConnectionNotFoundException;
 
-import org.microemu.DisplayAccess;
 import org.microemu.DisplayComponent;
-import org.microemu.MIDletAccess;
-import org.microemu.MIDletBridge;
+import org.microemu.android.annotation.DisableView;
 import org.microemu.android.device.AndroidDeviceDisplay;
 import org.microemu.android.device.AndroidFontManager;
 import org.microemu.android.device.AndroidInputMethod;
 import org.microemu.android.util.ActivityResultListener;
 import org.microemu.device.DeviceDisplay;
-import org.microemu.device.DeviceFactory;
 import org.microemu.device.EmulatorContext;
 import org.microemu.device.FontManager;
 import org.microemu.device.InputMethod;
@@ -51,18 +50,17 @@ import org.microemu.log.Logger;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.Window;
 import android.view.WindowManager.LayoutParams;
 
 
@@ -83,12 +81,8 @@ public abstract class MicroEmulatorActivity extends Activity {
 	
 	protected EmulatorContext emulatorContext;
 
-	public boolean windowFullscreen = true;
+//	public boolean windowFullscreen = true;
 	protected int statusBarHeight = 0;
-	/**
-	 * thread sleep time on switch screen 
-	 */
-	protected int sleepTimeOnSwitchScreen = 5000;
 	/**
 	 * execute switch screen onResume except first time
 	 */
@@ -132,7 +126,8 @@ public abstract class MicroEmulatorActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		// Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+		setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
+	    // Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
 		//TypedArray ta = getTheme().obtainStyledAttributes(new int[] { android.R.attr.windowFullscreen });
 		//windowFullscreen = ta.getBoolean(0, false);
 		    //requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -141,7 +136,8 @@ public abstract class MicroEmulatorActivity extends Activity {
 //                           WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 //		windowFullscreen=true;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-		if (!windowFullscreen) {
+    	android.util.Log.i(MicroEmulator.LOG_TAG, "config: Fullscreen "+config.Screen_DefaultFull);
+		if (!config.Screen_DefaultFull) {
 			statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
 		}
 		
@@ -209,12 +205,6 @@ public abstract class MicroEmulatorActivity extends Activity {
         };
 		
 		activityThread = Thread.currentThread();
-	
-		int currentapiVersion=android.os.Build.VERSION.SDK_INT;
-		// just for first start, this time must greater than the OPM jar loading time on the screen
-		// or switch screen must under the OPM jar loading on the screen
-		if(currentapiVersion<15)sleepTimeOnSwitchScreen = 1000;
-		else sleepTimeOnSwitchScreen = 5000;
 	}
 	
 	public View getContentView() {
@@ -228,24 +218,25 @@ public abstract class MicroEmulatorActivity extends Activity {
 		
 		contentView = view;
 		
-		if(!windowFullscreen)switchFullscreen();
+		if(!config.Screen_DefaultFull)switchFullscreen();
 	}
 		
 	/**
 	 * switch full screen and display the status bar
 	 */
 	void switchFullscreen() {
+		Log.d("AndroidCanvasUI", "Screen_TimeoutForStart: " + config.Screen_TimeoutForStart);  
+		
 		new Thread("WindowManager"){
 			@Override
 			public void run() {				
 		        try {
-					Thread.sleep(sleepTimeOnSwitchScreen);
+					Thread.sleep((long) config.Screen_TimeoutForStart*1000);
 			        postDelayed(new Runnable() {
 			            public void run() {
 			                LayoutParams params = new WindowManager.LayoutParams();
 			                params.x = statusBarHeight;
 						    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
-			        		Log.d("AndroidCanvasUI", "onDoubleTap: " + statusBarHeight);  
 			            }
 			        },1);
 				} catch (InterruptedException e) {
@@ -255,33 +246,6 @@ public abstract class MicroEmulatorActivity extends Activity {
 			}
 		}.start();
 		
-	}
-	
-
-	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
-		super.onConfigurationChanged(newConfig);
-		
-		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-		int statusBarHeight = 0;
-		if (!windowFullscreen) {
-			statusBarHeight = phoneCallIcon.getIntrinsicHeight();
-			//if(newConfig.keyboardHidden == Configuration.KEYBOARDHIDDEN_YES)getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
-                          //  WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		}
-		
-        Display display = getWindowManager().getDefaultDisplay();
-		AndroidDeviceDisplay deviceDisplay = (AndroidDeviceDisplay) DeviceFactory.getDevice().getDeviceDisplay();
-		deviceDisplay.setSize(display.getWidth(), display.getHeight());
-		MIDletAccess ma = MIDletBridge.getMIDletAccess();
-		if (ma == null) {
-			return;
-		}
-		DisplayAccess da = ma.getDisplayAccess();
-		if (da != null) {
-			da.sizeChanged();
-			deviceDisplay.repaint(0, 0, deviceDisplay.getFullWidth(), deviceDisplay.getFullHeight());
-		}
 	}
 	
 	public void addActivityResultListener(ActivityResultListener listener) {
@@ -316,5 +280,56 @@ public abstract class MicroEmulatorActivity extends Activity {
 	protected Dialog onCreateDialog(int id) {
 		return dialog;
 	}
+
 	
+	public <T> T getPreferences(T t,SharedPreferences preferences) {
+		Field[] fields = t.getClass().getFields();
+		for (Field field : fields) {
+			DisableView disEnabled = field.getAnnotation(DisableView.class);
+			if(disEnabled!=null)continue;
+			Class<?> type = field.getType(); 
+			String fieldName=field.getName(); 
+			try {
+				if(type.getPackage()!=null&&!type.getPackage().getName().startsWith("java.lang"))
+					getPreferences(field.get(t),preferences);
+				if(type.equals(String.class)){
+					String value = preferences.getString(fieldName, field.get(t).toString());
+					field.set(t, value);
+				}else if(type.equals(int.class)||type.equals(byte.class)){
+					int value = preferences.getInt(fieldName, field.getInt(t));
+					field.set(t, value);
+				}else if(type.equals(Integer.class)||type.equals(Byte.class)){
+					Integer value = preferences.getInt(fieldName, field.getInt(t));
+					field.set(t, value);
+				}else if(type.equals(boolean.class)){
+					boolean value = preferences.getBoolean(fieldName, field.getBoolean(t));
+					field.set(t, value);
+				}else if(type.equals(Boolean.class)){
+					Boolean value = preferences.getBoolean(fieldName,field.getBoolean(t));
+					field.set(t, value);
+				}else if(type.equals(Date.class)){
+					float value = preferences.getFloat(fieldName, ((Date)field.get(t)).getTime());
+					field.set(t, value);
+				}else if(type.equals(Float.class)||type.equals(float.class)){
+					Float value = preferences.getFloat(fieldName, field.getFloat(t));
+					field.set(t, value);
+				}else if(type.equals(Double.class)||type.equals(double.class)){
+					Float value = preferences.getFloat(fieldName, field.getFloat(t));
+					field.set(t, value);
+				}else continue;
+				
+			} catch (ClassCastException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return t;
+	}
+
 }

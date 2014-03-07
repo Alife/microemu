@@ -31,6 +31,7 @@ import javax.microedition.lcdui.Canvas;
 import org.microemu.DisplayAccess;
 import org.microemu.MIDletAccess;
 import org.microemu.MIDletBridge;
+import org.microemu.android.MicroEmulator;
 import org.microemu.device.DeviceFactory;
 import org.microemu.device.InputMethod;
 import android.util.Log;

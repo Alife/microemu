@@ -4,7 +4,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Set;
 
-import com.opera.mini.mod422.R;
+import org.microemu.android.view.MySurfaceView;
+
+import com.opera.mini.mod422.*;
 
 import android.app.Activity;
 import android.gesture.Gesture;
@@ -17,7 +19,6 @@ import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.MotionEvent;
-import android.view.MySurfaceView;
 import android.widget.EditText;
 import android.widget.TextView;
 

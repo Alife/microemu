@@ -30,12 +30,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.microedition.lcdui.Command;
 import javax.microedition.midlet.MIDlet;
@@ -60,23 +61,40 @@ import org.microemu.device.ui.CommandUI;
 import org.microemu.log.Logger;
 import org.microemu.util.JadProperties;
 
+import com.opera.mini.mod422.R;
+
+import android.R.integer;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
+import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.View.OnTouchListener;
 import android.view.WindowManager.LayoutParams;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Toast;
+import android.webkit.WebChromeClient;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListener {
 	
 	public static final String LOG_TAG = "MicroEmulator";
@@ -93,9 +111,73 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-        
-		//requestWindowFeature(Window.FEATURE_NO_TITLE);
-		
+    	Intent intent = getIntent();
+    	String action = intent.getAction();
+		if (Intent.ACTION_VIEW.equals(action)) {
+			String dataString = intent.getDataString();
+
+			final WindowManager wm = getWindowManager();
+			final LayoutParams params = new WindowManager.LayoutParams();
+			// 设置window type
+			params.type = WindowManager.LayoutParams.TYPE_PHONE;
+			/*
+			 * 如果设置为params.type = WindowManager.LayoutParams.TYPE_PHONE;
+			 * 那么优先级会降低一些, 即拉下通知栏不可见
+			 */
+			params.format = PixelFormat.RGBA_8888; // 设置图片格式，效果为背景透明
+			params.width = (int) (display.getWidth()*0.8);
+			params.height = (int) (display.getHeight()*0.8);
+
+			final RelativeLayout panel = new RelativeLayout(this);
+			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+					LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT);
+			panel.setLayoutParams(lp);
+			LinearLayout localLinearLayout = new LinearLayout(this);
+			panel.addView(localLinearLayout);
+			ImageView close = new ImageView(this);
+			close.setImageResource(R.drawable.close);
+			close.setOnClickListener(new OnClickListener() {
+				@Override
+				public void onClick(View v) {
+					// TODO Auto-generated method stub
+					wm.removeView(panel);
+					onResume();
+				}
+			});
+			
+			final WebView webView = new WebView(this);
+			webView.getSettings().setJavaScriptEnabled(false);// 设置使用够执行JS脚本
+			webView.getSettings().setBuiltInZoomControls(true);// 设置使支持缩放
+			// webView.getSettings().setDefaultFontSize(5);
+			webView.loadUrl(dataString);
+			//此方法可以处理webview 在加载时和加载完成时一些操作
+			webView.setWebViewClient(new WebViewClient(){
+			//重写此方法表明点击网页里面的链接还是在当前的webview里跳转，不跳到浏览器那边
+				@Override
+					public boolean shouldOverrideUrlLoading(WebView view, String url) {  
+						view.loadUrl(url);
+					return true;
+				}
+			});
+			localLinearLayout.addView(webView);
+			
+			lp = new RelativeLayout.LayoutParams(
+					LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT);
+				lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);//与父容器的左侧对齐
+				lp.addRule(RelativeLayout.ALIGN_PARENT_TOP);//与父容器的上侧对齐
+//				lp.leftMargin=30;
+//				lp.topMargin=30;
+				close.setId(1);//设置这个View 的id 
+				close.setLayoutParams(lp);//设置布局参数
+
+			webView.addView(close);
+			
+			wm.addView(panel, params);
+			return;
+		}
+    
+
+    	
         Logger.removeAllAppenders();
         Logger.setLocationEnabled(false);
         Logger.addAppender(new AndroidLoggerAppender());
@@ -136,16 +218,14 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         	
         }));
         
-        java.util.List params = new ArrayList();
+        java.util.List<String> params = new ArrayList<String>();
         params.add("--usesystemclassloader");
         params.add("--quit");
         
         String midletClassName;
         String jadName = null;
 		try {
-			Class r = Class.forName(getComponentName().getPackageName() + ".R$string");
-			Field[] fields = r.getFields();
-			Class[] classes = r.getClasses();
+			Class<?> r = Class.forName(getComponentName().getPackageName() + ".R$string");
 	        midletClassName = getResources().getString(r.getField("class_name").getInt(null));
             try {
                 jadName = getResources().getString(r.getField("jad_name").getInt(null));
@@ -169,7 +249,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         System.setProperty("microedition.locale", Locale.getDefault().toString());
 
         /* JSR-75 */
-        Map properties = new HashMap();
+        Map<String, String> properties = new HashMap<String, String>();
         properties.put("fsRoot", "/");
         //properties.put("fsSingle", "/");
         common.registerImplementation("org.microemu.cldc.file.FileSystem", properties, false);
@@ -203,7 +283,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             }
         }
 
-        MIDletAccess ma = MIDletBridge.getMIDletAccess(midlet);
+        if(midlet!=null)ma = MIDletBridge.getMIDletAccess(midlet);
         if (ma != null) {
             ma.pauseApp();
             ma.getDisplayAccess().hideNotify();
@@ -213,18 +293,19 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	@Override
 	public void setContentView(View view) {
 		super.setContentView(view);
-		view.setOnTouchListener(this);
+        view.setOnTouchListener(this);
 	}
 
 	@Override
     protected void onResume() {
         super.onResume();
-        
+        setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
+	    
         new Thread(new Runnable() {
 
             public void run()
             {
-                MIDletAccess ma = MIDletBridge.getMIDletAccess(midlet);
+                if(midlet!=null)ma = MIDletBridge.getMIDletAccess(midlet);
                 if (ma != null) {
                     try {
                         ma.startApp();
@@ -247,17 +328,20 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             
         }).start();
         
-        if(!isFirstResume&&!windowFullscreen)switchFullscreen();
+    	android.util.Log.i(MicroEmulator.LOG_TAG, "config: Screen_DefaultFull "+config.Screen_DefaultFull);
+    	android.util.Log.i(MicroEmulator.LOG_TAG, "config: Screen_TimeoutForStart "+config.Screen_TimeoutForStart);
+        if(!isFirstResume&&!config.Screen_DefaultFull)switchFullscreen();
     	isFirstResume = false;
 		// if jar already run, let switch quickly
-		sleepTimeOnSwitchScreen = 1;
+    	config.Screen_TimeoutForStart = 0;
     }
     
 	protected void initializeExtensions() {
     }
 
     private boolean ignoreBackKeyUp = false;
-	@Override
+
+    @Override
 	public boolean dispatchKeyEvent(KeyEvent event) {
 		int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
         if (ignoreKey(keyCode)) {return super.dispatchKeyEvent(event);}	
@@ -267,42 +351,44 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		if (da == null) {return false;}
 		AndroidDisplayableUI ui = (AndroidDisplayableUI) da.getDisplayableUI(da.getCurrent());
 		if (ui == null) {return false;}
-		if(keyAction==KeyEvent.ACTION_DOWN)
-		{
-		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			List<AndroidCommandUI> commands = ui.getCommandsUI();
-			
-			CommandUI cmd = getFirstCommandOfType(commands, Command.BACK);
-			if (cmd != null) {
-				if (ui.getCommandListener() != null) {
+		if(keyAction==KeyEvent.ACTION_DOWN){
+			if (keyCode == KeyEvent.KEYCODE_BACK) {
+				List<AndroidCommandUI> commands = ui.getCommandsUI();
+				
+				CommandUI cmd = getFirstCommandOfType(commands, Command.BACK);
+				if (cmd != null) {
+					if (ui.getCommandListener() != null) {
 					ignoreBackKeyUp = true;
-					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+						MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+					}
+					return true;
 				}
-				return true;
-			}
-
-			cmd = getFirstCommandOfType(commands, Command.EXIT);
-			if (cmd != null) {
-				if (ui.getCommandListener() != null) {
+	
+				cmd = getFirstCommandOfType(commands, Command.EXIT);
+				if (cmd != null) {
+					if (ui.getCommandListener() != null) {
 					ignoreBackKeyUp = true;
-					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+						MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+					}
+					return true;
 				}
-				return true;
-			}
-			
-			cmd = getFirstCommandOfType(commands, Command.CANCEL);
-			if (cmd != null) {
-				if (ui.getCommandListener() != null) {
+				
+				cmd = getFirstCommandOfType(commands, Command.CANCEL);
+				if (cmd != null) {
+					if (ui.getCommandListener() != null) {
 					ignoreBackKeyUp = true;
-					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+						MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+					}
+					return true;
 				}
-				return true;
 			}
-		}
-		if (keyCode == KeyEvent.KEYCODE_MENU){
-		//windowFullscreen=false;
-		//getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-			((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);return false;}
+			if (keyCode == KeyEvent.KEYCODE_MENU){
+			//windowFullscreen=false;
+			//getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+				((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
+					.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+				return false;
+			}
 		}
 				
 		switch (keyCode) {
@@ -331,21 +417,34 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	    //if(event.getKeyCode()!=0)Log.d("key pressed", String.valueOf(event.getKeyCode()));
 	    //else Log.d("key pressed_", String.valueOf((int)(event.getCharacters().toString().charAt(0))));
 	
-		//Log.i(LOG_TAG, "keyAction: "+keyAction+"keyCode: "+keyCode+"Char: "+event.getCharacters());
 		if (ui instanceof AndroidCanvasUI) {
 			Device device = DeviceFactory.getDevice();
 			AndroidInputMethod inputMethod = (AndroidInputMethod) device.getInputMethod();
-			if(keyAction==KeyEvent.ACTION_DOWN)inputMethod.buttonPressed(keyCode);
-			else if(keyAction==KeyEvent.ACTION_UP)inputMethod.buttonReleased(keyCode);
-			else {
-				inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
-				// support Chinese word
-				if(event.getCharacters().length()>1){
-					for (int i = 1; i < event.getCharacters().length(); i++) {
-						int j = event.getCharacters().charAt(i);
-						inputMethod.buttonPressed(j).buttonReleased(j);
+			if(!_keyCodeTest){
+				if(keyAction==KeyEvent.ACTION_DOWN)inputMethod.buttonPressed(keyCode);
+				else if(keyAction==KeyEvent.ACTION_UP)inputMethod.buttonReleased(keyCode);
+				else {
+					Log.i(LOG_TAG, "keyAction: "+keyAction+"keyCode: "+keyCode+"Char: "+event.getCharacters());
+					inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
+					// support Chinese word
+					if(event.getCharacters().length()>1){
+						for (int i = 1; i < event.getCharacters().length(); i++) {
+							int j = event.getCharacters().charAt(i);
+							inputMethod.buttonPressed(j).buttonReleased(j);
+						}
 					}
 				}
+			}
+			else {
+				if(keyCode == -151)_keyCode = _keyCode +1;
+				if(keyCode == -152)_keyCode = _keyCode -1;
+				if(keyCode == -211)_keyCode = 0;
+				inputMethod.buttonPressed(_keyCode).buttonReleased(_keyCode);
+				Log.i(LOG_TAG, " _keyCode: "+_keyCode);				
+				Log.i(LOG_TAG, "keyAction: "+keyAction+" keyCode: "+keyCode+" Char: "+event.getCharacters());				
+			}
+			if(event.getCharacters()!=null&&!event.getCharacters().equals("测试")){
+				_keyCodeTest = !_keyCodeTest;
 			}
 
 			return true;
@@ -353,6 +452,8 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 
 	    return super.dispatchKeyEvent(event);
 	}
+	private int _keyCode = 0;
+	private boolean _keyCodeTest = false;
 
     /*
 	@Override
@@ -539,6 +640,9 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
+		super.onPrepareOptionsMenu(menu);
+		menu.clear();	
+	
 		MIDletAccess ma = MIDletBridge.getMIDletAccess();
 		if (ma == null) {
 			return false;
@@ -552,7 +656,6 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 			return false;
 		}		
 		
-		menu.clear();	
 		boolean result = false;
 		List<AndroidCommandUI> commands = ui.getCommandsUI();
 		for (int i = 0; i < commands.size(); i++) {
@@ -594,26 +697,26 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		return false;
 	}
 	
+	// http://www.cnblogs.com/sw926/p/3208158.html
 	class MyGesture extends SimpleOnGestureListener {
 
-        int left, top, right, bottom =0;
         // 触摸屏按下时立刻触发
 		@Override
         public boolean onDown(MotionEvent e) {
-            android.util.Log.i(LOG_TAG, "onDown");
+            //android.util.Log.i(LOG_TAG, "onDown");
             return super.onDown(e);
         }
 
         // 短按，触摸屏按下后片刻后抬起，会触发这个手势，如果迅速抬起则不会；强调的是没有松开或者拖动的状态，由一个ACTION_DOWN触发
         @Override
         public void onShowPress(MotionEvent e) {
-            android.util.Log.i(LOG_TAG, "onShowPress");
+            //android.util.Log.i(LOG_TAG, "onShowPress");
         }
 
         // 抬起，手指离开触摸屏时触发(长按、滚动、滑动时，不会触发这个手势)
         @Override
         public boolean onSingleTapUp(MotionEvent e) {
-            android.util.Log.i(LOG_TAG, "onSingleTapUp");
+            //android.util.Log.i(LOG_TAG, "onSingleTapUp");
             return super.onSingleTapUp(e);
         }
 
@@ -621,61 +724,50 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         @Override
         public boolean onScroll(MotionEvent e1, MotionEvent e2,
                 float distanceX, float distanceY) {
-            android.util.Log.i(LOG_TAG, "onScroll");
+            //android.util.Log.i(LOG_TAG, "onScroll");
             return super.onScroll(e1, e2, distanceX, distanceY);
         }
 
         // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
         @Override
         public void onLongPress(MotionEvent e) {
-            android.util.Log.i(LOG_TAG, "onLongPress");
+            //android.util.Log.i(LOG_TAG, "onLongPress");
+            // 2. 启动计时器
+        	//android.util.Log.i(LOG_TAG, "config: Setting_LongPressOpen "+config.Setting_LongPressOpen);
+            if(config.Setting_LongPressOpen){
+            	android.util.Log.i(LOG_TAG, "config: Setting_LongPressTimeout "+config.Setting_LongPressTimeout);
+            	android.util.Log.i(LOG_TAG, "runnable: postDelayed ");
+            	handler.postDelayed(runnable, (long) (config.Setting_LongPressTimeout*1000));//每两秒执行一次runnable
+            }
+
         }
     
         // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
         @Override
         public boolean onDoubleTap(MotionEvent e) {
-            android.util.Log.i(LOG_TAG, "onDoubleTap");
-        	
-            Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
-//			View decorView=getWindow().getDecorView();
-//            FrameLayout frameLayout = (FrameLayout) ((ViewGroup)decorView).getChildAt(0);;
-//            CanvasView canvasView = (CanvasView) (frameLayout).getChildAt(0);;
-
-            windowFullscreen = !windowFullscreen;
-            LayoutParams params = null;
-			if (windowFullscreen) {  
-//            	Toast.makeText(MicroEmulator.this, "full_screen", Toast.LENGTH_SHORT).show();
-                params  = getWindow().getAttributes();  
-                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
-//                params.x=0;
-                getWindow().setAttributes(params);  
-                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
-            } else {  
-//            	Toast.makeText(MicroEmulator.this, "exit_full_screen", Toast.LENGTH_SHORT).show();
-                params = getWindow().getAttributes();  
-                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
-                //params.x=statusBarHeight;
-                getWindow().setAttributes(params);  
-                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-                
-        		switchFullscreen();
-
-            } 
-			
-//            WindowManager wm = (WindowManager) getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-//            LayoutParams params = new WindowManager.LayoutParams();
-//    		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-//            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
-//            params.x = !windowFullscreen?statusBarHeight:0;
-//            wm.updateViewLayout((View) contentView.getParent().getParent(), params);
-//
-//            //android.util.Log.i(LOG_TAG,  params.x+"");
-//            post(new Runnable() {
-//                public void run() {
-//                }
-//            });
+            //android.util.Log.i(LOG_TAG, "onDoubleTap");
             
+            //android.util.Log.i(LOG_TAG, "config: FullscreenChange "+config.Screen_SwitchOnDoubleTap);      	
+            if(config.Screen_SwitchOnDoubleTap){
+            	Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
+	            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
+	
+	            config.Screen_DefaultFull = !config.Screen_DefaultFull;
+	            LayoutParams params = null;
+	            params  = getWindow().getAttributes();  
+				if (config.Screen_DefaultFull) {  
+	                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
+	                getWindow().setAttributes(params);  
+	                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
+	            } else {  
+	                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+	                getWindow().setAttributes(params);  
+	                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+	                
+	        		switchFullscreen();
+	            } 
+            }
+			
         	return super.onDoubleTap(e);
         }
 
@@ -690,8 +782,9 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		@Override
 		public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 				float velocityY) {
-            android.util.Log.i(LOG_TAG, "onFling");
-			final int FLING_MIN_DISTANCE = 100;// X或者y轴上移动的距离(像素)
+            //android.util.Log.i(LOG_TAG, "onFling");
+
+            final int FLING_MIN_DISTANCE = 100;// X或者y轴上移动的距离(像素)
 			final int FLING_MIN_VELOCITY = 200;// x或者y轴上的移动速度(像素/秒)
 
 //			Device device = DeviceFactory.getDevice();
@@ -719,9 +812,62 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	
 	private GestureDetector gesture=new GestureDetector(new MyGesture ());
 
+	Handler handler=new Handler(); 
+	Runnable runnable=new Runnable() { 
+	    @Override
+	    public void run() { 
+	        startActivityForResult(new Intent(MicroEmulator.this,SettingsActivity.class), REQ_SYSTEM_SETTINGS);
+	    } 
+	};
+
 	@Override
 	public boolean onTouch(final View paramView, MotionEvent event) {
-		return gesture.onTouchEvent(event);
+		 String name = "";
+		 switch (event.getAction()) {
+		     case MotionEvent.ACTION_DOWN: {
+		         name = "ACTION_DOWN";
+		         break;
+		     }
+		     case MotionEvent.ACTION_MOVE: {
+		         name = "ACTION_MOVE";
+		         break;
+		     }
+		     case MotionEvent.ACTION_UP: {
+		         name = "ACTION_UP";
+		         break;
+		     }
+		 }   
+		 switch (event.getAction()) {
+		     case MotionEvent.ACTION_DOWN: {
+		         break;
+		     }
+		     case MotionEvent.ACTION_MOVE:
+		     case MotionEvent.ACTION_UP:
+	            // 3. 停止计时器
+	        	//android.util.Log.i(LOG_TAG, "runnable: removeCallbacks");
+	            handler.removeCallbacks(runnable); 
+		         break;
+	     }
+		 //android.util.Log.i(LOG_TAG, "onTouch Action" + name);
+		 return gesture.onTouchEvent(event);
 	}
 	
+	
+	 //Settings设置界面返回的结果  
+    int REQ_SYSTEM_SETTINGS=0;
+    protected  void onActivityResult(int requestCode, int resultCode, Intent data) {  
+		if(requestCode == REQ_SYSTEM_SETTINGS)  
+        {  
+            //获取设置界面PreferenceActivity中各个Preference的值  
+			setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
+		    //打印结果  
+            Log.v(LOG_TAG, "onActivityResult");  
+        }  
+        else  
+        {  
+        	
+            //其他Intent返回的结果
+        }  
+    }  
 }
+

@@ -74,13 +74,13 @@ public class AndroidFontManager implements FontManager
 	    	if ((meFont.getStyle() & Font.STYLE_UNDERLINED) != 0) {
 	    		underlined = true;
 	    	}
-	    	int size = 0;
+	    	int size = 0;	    	
 	    	if (meFont.getSize() == Font.SIZE_SMALL) {
-	    		size = MicroEmulatorActivity.config.FONT_SIZE_SMALL;
+	    		size = MicroEmulatorActivity.config.Font.SIZE_1SMALL;
 	    	} else if (meFont.getSize() == Font.SIZE_MEDIUM) {
-	    		size = MicroEmulatorActivity.config.FONT_SIZE_MEDIUM;
+	    		size = MicroEmulatorActivity.config.Font.SIZE_2MEDIUM;
 	    	} else if (meFont.getSize() == Font.SIZE_LARGE) {
-	    		size = MicroEmulatorActivity.config.FONT_SIZE_LARGE;
+	    		size = MicroEmulatorActivity.config.Font.SIZE_3LARGE;
 	    	}
 	    	result = new AndroidFont(Typeface.create(family, style), TypedValue.applyDimension(
                             TypedValue.COMPLEX_UNIT_SP,

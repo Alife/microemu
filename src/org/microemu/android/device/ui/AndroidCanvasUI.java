@@ -52,13 +52,9 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.SurfaceView;
 
-import android.widget.LinearLayout;
-
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.view.inputmethod.InputMethodManager;
-import android.util.Log;
 import org.microemu.android.util.AndroidRepaintListener;
 
 public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {   
