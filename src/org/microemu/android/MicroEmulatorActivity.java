@@ -62,6 +62,7 @@ import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
+import android.webkit.MimeTypeMap;
 
 
 
@@ -194,19 +195,32 @@ public abstract class MicroEmulatorActivity extends Activity {
             public boolean platformRequest(String url) throws ConnectionNotFoundException 
             {
                 try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
+                	Uri uri = Uri.parse(url);
+                	String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+                    String type ="*/*";
+					if (extension != null) {
+                        type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+                    }
+					if(type==null){/* 取得扩展名 */  
+						extension=url.substring(url.lastIndexOf(".")+1,url.length()).toLowerCase(); 
+					    type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+					}
+					if(type==null) type="text/plain";
+                	Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+					intent.setType(type);
+                	Log.i(MicroEmulator.LOG_TAG, "platformRequest "+url +" type:"+type);
+                	startActivity(intent);
                 } catch (ActivityNotFoundException e) {
-                    throw new ConnectionNotFoundException();
+                    throw new ConnectionNotFoundException(e.getMessage());
                 }
-
                 return true;
             }
-                    
         };
 		
 		activityThread = Thread.currentThread();
 	}
 	
+
 	public View getContentView() {
 		return contentView;
 	}
