@@ -12,8 +12,6 @@ import org.microemu.android.util.Tools;
 
 import com.opera.mini.mod422.R;
 
-import android.R.bool;
-import android.R.string;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
@@ -26,9 +24,7 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.util.Log;
-import android.view.MenuItem;
 import android.widget.RelativeLayout;
-import android.widget.Toast;
 
 public class SettingsActivity extends PreferenceActivity {
 	RelativeLayout panel;
@@ -95,6 +91,7 @@ public class SettingsActivity extends PreferenceActivity {
 					}else continue;
 				}
 				else {
+					// ListPreference 保存的只能是 String
 					preference = new ListPreference(this);
 					((ListPreference) preference).setEntries(entries.names());
 					((ListPreference) preference).setEntryValues(Tools.Ints2Strings(entries.value()));
@@ -136,14 +133,4 @@ public class SettingsActivity extends PreferenceActivity {
 		}
 	}
 
-	@Override
-	public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen,
-			Preference preference) {
-		super.onPreferenceTreeClick(preferenceScreen, preference);
-		String text = " key "+preference.getKey();
-		text += " isEnabled "+preference.isEnabled();
-		//Toast.makeText(this,text, Toast.LENGTH_SHORT).show();
-
-		return super.onPreferenceTreeClick(preferenceScreen, preference);
-	}
 }

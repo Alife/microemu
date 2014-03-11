@@ -35,9 +35,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
+import javax.microedition.lcdui.Canvas;
 import javax.microedition.lcdui.Command;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
@@ -61,40 +60,24 @@ import org.microemu.device.ui.CommandUI;
 import org.microemu.log.Logger;
 import org.microemu.util.JadProperties;
 
-import com.opera.mini.mod422.R;
-
-import android.R.integer;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.graphics.PixelFormat;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
-import android.view.View.OnClickListener;
-import android.view.WindowManager;
-import android.view.View.OnTouchListener;
-import android.view.WindowManager.LayoutParams;
 import android.view.View;
+import android.view.View.OnTouchListener;
+import android.view.WindowManager;
+import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.WebChromeClient;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListener {
 	
 	public static final String LOG_TAG = "MicroEmulator";
@@ -111,73 +94,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
     @Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
-    	Intent intent = getIntent();
-    	String action = intent.getAction();
-		if (Intent.ACTION_VIEW.equals(action)) {
-			String dataString = intent.getDataString();
-
-			final WindowManager wm = getWindowManager();
-			final LayoutParams params = new WindowManager.LayoutParams();
-			// 设置window type
-			params.type = WindowManager.LayoutParams.TYPE_PHONE;
-			/*
-			 * 如果设置为params.type = WindowManager.LayoutParams.TYPE_PHONE;
-			 * 那么优先级会降低一些, 即拉下通知栏不可见
-			 */
-			params.format = PixelFormat.RGBA_8888; // 设置图片格式，效果为背景透明
-			params.width = (int) (display.getWidth()*0.8);
-			params.height = (int) (display.getHeight()*0.8);
-
-			final RelativeLayout panel = new RelativeLayout(this);
-			RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
-					LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT);
-			panel.setLayoutParams(lp);
-			LinearLayout localLinearLayout = new LinearLayout(this);
-			panel.addView(localLinearLayout);
-			ImageView close = new ImageView(this);
-			close.setImageResource(R.drawable.close);
-			close.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View v) {
-					// TODO Auto-generated method stub
-					wm.removeView(panel);
-					onResume();
-				}
-			});
-			
-			final WebView webView = new WebView(this);
-			webView.getSettings().setJavaScriptEnabled(false);// 设置使用够执行JS脚本
-			webView.getSettings().setBuiltInZoomControls(true);// 设置使支持缩放
-			// webView.getSettings().setDefaultFontSize(5);
-			webView.loadUrl(dataString);
-			//此方法可以处理webview 在加载时和加载完成时一些操作
-			webView.setWebViewClient(new WebViewClient(){
-			//重写此方法表明点击网页里面的链接还是在当前的webview里跳转，不跳到浏览器那边
-				@Override
-					public boolean shouldOverrideUrlLoading(WebView view, String url) {  
-						view.loadUrl(url);
-					return true;
-				}
-			});
-			localLinearLayout.addView(webView);
-			
-			lp = new RelativeLayout.LayoutParams(
-					LayoutParams.WRAP_CONTENT,LayoutParams.WRAP_CONTENT);
-				lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);//与父容器的左侧对齐
-				lp.addRule(RelativeLayout.ALIGN_PARENT_TOP);//与父容器的上侧对齐
-//				lp.leftMargin=30;
-//				lp.topMargin=30;
-				close.setId(1);//设置这个View 的id 
-				close.setLayoutParams(lp);//设置布局参数
-
-			webView.addView(close);
-			
-			wm.addView(panel, params);
-			return;
-		}
-    
-
-    	
+		
         Logger.removeAllAppenders();
         Logger.setLocationEnabled(false);
         Logger.addAppender(new AndroidLoggerAppender());
@@ -324,16 +241,18 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
                         }
                     });
                 }
-            }
-            
+                
+		        if(!isFirstResume&&!windowFullscreen)
+		        	post(new Runnable() {
+			            public void run() {
+			            	LayoutParams params = new WindowManager.LayoutParams();
+			            	params.x = !windowFullscreen?statusBarHeight:0;
+						    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
+			            }
+			        });
+		    	isFirstResume = false;
+	    	}
         }).start();
-        
-    	android.util.Log.i(MicroEmulator.LOG_TAG, "config: Screen_DefaultFull "+config.Screen_DefaultFull);
-    	android.util.Log.i(MicroEmulator.LOG_TAG, "config: Screen_TimeoutForStart "+config.Screen_TimeoutForStart);
-        if(!isFirstResume&&!config.Screen_DefaultFull)switchFullscreen();
-    	isFirstResume = false;
-		// if jar already run, let switch quickly
-    	config.Screen_TimeoutForStart = 0;
     }
     
 	protected void initializeExtensions() {
@@ -739,7 +658,6 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             	android.util.Log.i(LOG_TAG, "runnable: postDelayed ");
             	handler.postDelayed(runnable, (long) (config.Setting_LongPressTimeout*1000));//每两秒执行一次runnable
             }
-
         }
     
         // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
@@ -749,22 +667,31 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             
             //android.util.Log.i(LOG_TAG, "config: FullscreenChange "+config.Screen_SwitchOnDoubleTap);      	
             if(config.Screen_SwitchOnDoubleTap){
-            	Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-	            statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
-	
-	            config.Screen_DefaultFull = !config.Screen_DefaultFull;
+	            windowFullscreen = !windowFullscreen;
 	            LayoutParams params = null;
 	            params  = getWindow().getAttributes();  
-				if (config.Screen_DefaultFull) {  
+				if (windowFullscreen) {  
+		            android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
 	                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
 	                getWindow().setAttributes(params);  
 	                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
 	            } else {  
+	                android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
 	                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
 	                getWindow().setAttributes(params);  
 	                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-	                
-	        		switchFullscreen();
+        		new Thread("WindowManager"){
+        			@Override
+        			public void run() {				
+		        post(new Runnable() {
+		            public void run() {
+		                LayoutParams params = new WindowManager.LayoutParams();
+		                params.x = windowFullscreen?statusBarHeight:0;
+					    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
+		            }
+		        });
+        			}
+        		}.start();
 	            } 
             }
 			
@@ -865,7 +792,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         }  
         else  
         {  
-        	
+        	int a = Canvas.KEY_NUM0;
             //其他Intent返回的结果
         }  
     }  

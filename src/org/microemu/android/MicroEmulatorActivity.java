@@ -37,6 +37,7 @@ import javax.microedition.io.ConnectionNotFoundException;
 
 import org.microemu.DisplayComponent;
 import org.microemu.android.annotation.DisableView;
+import org.microemu.android.annotation.Entries;
 import org.microemu.android.device.AndroidDeviceDisplay;
 import org.microemu.android.device.AndroidFontManager;
 import org.microemu.android.device.AndroidInputMethod;
@@ -64,8 +65,6 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.webkit.MimeTypeMap;
 
-
-
 public abstract class MicroEmulatorActivity extends Activity {
 		
 	public static AndroidConfig config = new AndroidConfig();
@@ -82,7 +81,7 @@ public abstract class MicroEmulatorActivity extends Activity {
 	
 	protected EmulatorContext emulatorContext;
 
-//	public boolean windowFullscreen = true;
+	public boolean windowFullscreen = true;
 	protected int statusBarHeight = 0;
 	/**
 	 * execute switch screen onResume except first time
@@ -130,17 +129,16 @@ public abstract class MicroEmulatorActivity extends Activity {
 		setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
 	    // Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
 		//TypedArray ta = getTheme().obtainStyledAttributes(new int[] { android.R.attr.windowFullscreen });
+		//requestWindowFeature(Window.FEATURE_NO_TITLE);
 		//windowFullscreen = ta.getBoolean(0, false);
-		    //requestWindowFeature(Window.FEATURE_NO_TITLE);
 			//setTitle("aaa");
-//		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
-//                           WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-//		windowFullscreen=true;
+		windowFullscreen=config.Screen_DefaultFull;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
     	android.util.Log.i(MicroEmulator.LOG_TAG, "config: Fullscreen "+config.Screen_DefaultFull);
-		if (!config.Screen_DefaultFull) {
-			statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
-		}
+		statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
+
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
+                           WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 		
         display = getWindowManager().getDefaultDisplay();
         
@@ -232,36 +230,28 @@ public abstract class MicroEmulatorActivity extends Activity {
 		
 		contentView = view;
 		
-		if(!config.Screen_DefaultFull)switchFullscreen();
-	}
-		
-	/**
-	 * switch full screen and display the status bar
-	 */
-	void switchFullscreen() {
-		Log.d("AndroidCanvasUI", "Screen_TimeoutForStart: " + config.Screen_TimeoutForStart);  
-		
-		new Thread("WindowManager"){
-			@Override
-			public void run() {				
-		        try {
-					Thread.sleep((long) config.Screen_TimeoutForStart*1000);
-			        postDelayed(new Runnable() {
+		if(!windowFullscreen){
+			new Thread("WindowManager"){
+				@Override
+				public void run() {	
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+			        post(new Runnable() {
 			            public void run() {
-			                LayoutParams params = new WindowManager.LayoutParams();
-			                params.x = statusBarHeight;
+			            	LayoutParams params = new WindowManager.LayoutParams();
+			            	params.x = !windowFullscreen?statusBarHeight:0;
 						    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
 			            }
-			        },1);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+			        });
 				}
-			}
-		}.start();
-		
+			}.start();
+		}
 	}
-	
+		
 	public void addActivityResultListener(ActivityResultListener listener) {
 		activityResultListeners.add(listener);
 	}
@@ -304,34 +294,43 @@ public abstract class MicroEmulatorActivity extends Activity {
 			Class<?> type = field.getType(); 
 			String fieldName=field.getName(); 
 			try {
-				if(type.getPackage()!=null&&!type.getPackage().getName().startsWith("java.lang"))
-					getPreferences(field.get(t),preferences);
-				if(type.equals(String.class)){
+				Entries entries = field.getAnnotation(Entries.class);
+				if(entries==null){
+					
+					if(type.getPackage()!=null&&!type.getPackage().getName().startsWith("java.lang"))
+						getPreferences(field.get(t),preferences);
+					if(type.equals(String.class)){
+						String value = preferences.getString(fieldName, field.get(t).toString());
+						field.set(t, value);
+					}else if(type.equals(int.class)||type.equals(byte.class)){
+						int value = preferences.getInt(fieldName, field.getInt(t));
+						preferences.getInt(fieldName, Integer.parseInt(field.getInt(t)+""));
+						field.set(t, value);
+					}else if(type.equals(Integer.class)||type.equals(Byte.class)){
+						Integer value = preferences.getInt(fieldName, field.getInt(t));
+						field.set(t, value);
+					}else if(type.equals(boolean.class)){
+						boolean value = preferences.getBoolean(fieldName, field.getBoolean(t));
+						field.set(t, value);
+					}else if(type.equals(Boolean.class)){
+						Boolean value = preferences.getBoolean(fieldName,field.getBoolean(t));
+						field.set(t, value);
+					}else if(type.equals(Date.class)){
+						float value = preferences.getFloat(fieldName, ((Date)field.get(t)).getTime());
+						field.set(t, value);
+					}else if(type.equals(Float.class)||type.equals(float.class)){
+						Float value = preferences.getFloat(fieldName, field.getFloat(t));
+						field.set(t, value);
+					}else if(type.equals(Double.class)||type.equals(double.class)){
+						Float value = preferences.getFloat(fieldName, field.getFloat(t));
+						field.set(t, value);
+					}else continue;
+				}
+				else {
+					// ListPreference 保存的只能是 String
 					String value = preferences.getString(fieldName, field.get(t).toString());
-					field.set(t, value);
-				}else if(type.equals(int.class)||type.equals(byte.class)){
-					int value = preferences.getInt(fieldName, field.getInt(t));
-					field.set(t, value);
-				}else if(type.equals(Integer.class)||type.equals(Byte.class)){
-					Integer value = preferences.getInt(fieldName, field.getInt(t));
-					field.set(t, value);
-				}else if(type.equals(boolean.class)){
-					boolean value = preferences.getBoolean(fieldName, field.getBoolean(t));
-					field.set(t, value);
-				}else if(type.equals(Boolean.class)){
-					Boolean value = preferences.getBoolean(fieldName,field.getBoolean(t));
-					field.set(t, value);
-				}else if(type.equals(Date.class)){
-					float value = preferences.getFloat(fieldName, ((Date)field.get(t)).getTime());
-					field.set(t, value);
-				}else if(type.equals(Float.class)||type.equals(float.class)){
-					Float value = preferences.getFloat(fieldName, field.getFloat(t));
-					field.set(t, value);
-				}else if(type.equals(Double.class)||type.equals(double.class)){
-					Float value = preferences.getFloat(fieldName, field.getFloat(t));
-					field.set(t, value);
-				}else continue;
-				
+					field.set(t, Integer.parseInt(value));
+				}
 			} catch (ClassCastException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();

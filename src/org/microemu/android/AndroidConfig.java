@@ -26,21 +26,10 @@
 
 package org.microemu.android;
 
-import java.lang.reflect.Field;
-import java.util.Date;
-
 import org.microemu.android.annotation.DisableView;
 import org.microemu.android.annotation.Entries;
 import org.microemu.android.annotation.Summary;
 import org.microemu.android.annotation.Title;
-import org.microemu.android.util.Tools;
-
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.CheckBoxPreference;
-import android.preference.EditTextPreference;
-import android.preference.PreferenceCategory;
-import android.preference.PreferenceManager;
 
 @Title("settings")
 public class AndroidConfig {
@@ -64,7 +53,7 @@ public class AndroidConfig {
 		
 		@Title("大号字体")
 		@Entries(value={16,18,20,22,24,26,28,30,32,34},
-				names={"16","8","20","22","24","26","28","30","32","34"})
+				names={"16","18","20","22","24","26","28","30","32","34"})
 		public int SIZE_3LARGE = 20;
 		
 	}
@@ -99,14 +88,12 @@ public class AndroidConfig {
 	@DisableView()
     public static int ORIG_DISPLAY_HEIGHT = 320;
 	@Title("默认全屏")
+	@Summary("仅启动时生效。")
     public static boolean Screen_DefaultFull = true;
 	@Title("双击切换全屏")
     public static boolean Screen_SwitchOnDoubleTap = true;
-	@Title("通知栏显示时间")
-	@Summary("单位秒")
-	@Entries(value={1,2,3,4,5},names={"1秒","2秒","3秒","4秒","5秒"})
-	public static int Screen_TimeoutForStart = 2;
 	@Title("长按调出设置页面")
+	@DisableView()
 	public static boolean Setting_LongPressOpen = true;
 	@Title("长按调出设置的时间")
 	@Summary("单位秒")
