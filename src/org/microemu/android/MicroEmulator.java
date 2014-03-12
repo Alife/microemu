@@ -310,6 +310,16 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 			}
 		}
 				
+		int pressTime = 0;
+		if(config.Setting_SupportNumKey){
+		// support Num KeyEvent for opera mini mod
+		if(keyCode==KeyEvent.KEYCODE_0){pressTime=10;}
+		else if(keyCode==KeyEvent.KEYCODE_1)pressTime=21;
+		else if(keyCode>=KeyEvent.KEYCODE_2&&keyCode<=KeyEvent.KEYCODE_6)pressTime=3;
+		else if(keyCode==KeyEvent.KEYCODE_8)pressTime=3;
+		else if(keyCode==KeyEvent.KEYCODE_7||keyCode==KeyEvent.KEYCODE_9)pressTime=4;
+		}
+		
 		switch (keyCode) {
 		case KeyEvent.KEYCODE_DPAD_CENTER :
 			keyCode = -5;
@@ -331,7 +341,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 			break;
 		default: 
             String ch=event.getCharacters();
-			if(ch!=null){if(ch.length()>0)keyCode=(int)ch.charAt(0);} else{if(unicodeChar!=0)keyCode=unicodeChar;else keyCode=-127-keyCode;}
+			if(ch!=null){if(ch.length()>0)keyCode=(int)ch.charAt(0);}else{if(unicodeChar!=0)keyCode=unicodeChar;else keyCode=-127-keyCode;}
 		}
 	    //if(event.getKeyCode()!=0)Log.d("key pressed", String.valueOf(event.getKeyCode()));
 	    //else Log.d("key pressed_", String.valueOf((int)(event.getCharacters().toString().charAt(0))));
@@ -339,40 +349,27 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		if (ui instanceof AndroidCanvasUI) {
 			Device device = DeviceFactory.getDevice();
 			AndroidInputMethod inputMethod = (AndroidInputMethod) device.getInputMethod();
-			if(!_keyCodeTest){
-				if(keyAction==KeyEvent.ACTION_DOWN)inputMethod.buttonPressed(keyCode);
-				else if(keyAction==KeyEvent.ACTION_UP)inputMethod.buttonReleased(keyCode);
-				else {
-					Log.i(LOG_TAG, "keyAction: "+keyAction+"keyCode: "+keyCode+"Char: "+event.getCharacters());
-					inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
-					// support Chinese word
-					if(event.getCharacters().length()>1){
-						for (int i = 1; i < event.getCharacters().length(); i++) {
-							int j = event.getCharacters().charAt(i);
-							inputMethod.buttonPressed(j).buttonReleased(j);
-						}
+			Log.i(LOG_TAG, "keyAction:"+keyAction+" keyCode:"+keyCode+" Char:"+event.getCharacters());
+			if(keyAction==KeyEvent.ACTION_DOWN)inputMethod.buttonPressed(keyCode);
+			else if(keyAction==KeyEvent.ACTION_UP)inputMethod.buttonReleased(keyCode);
+			else { // keyAction==KeyEvent.ACTION_MULTIPLE
+				inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
+				// support Chinese character
+				if(event.getCharacters().length()>1){
+					for (int i = 1; i < event.getCharacters().length(); i++) {
+						int secondKeyCode = event.getCharacters().charAt(i);
+						inputMethod.buttonPressed(secondKeyCode).buttonReleased(secondKeyCode);
 					}
 				}
 			}
-			else {
-				if(keyCode == -151)_keyCode = _keyCode +1;
-				if(keyCode == -152)_keyCode = _keyCode -1;
-				if(keyCode == -211)_keyCode = 0;
-				inputMethod.buttonPressed(_keyCode).buttonReleased(_keyCode);
-				Log.i(LOG_TAG, " _keyCode: "+_keyCode);				
-				Log.i(LOG_TAG, "keyAction: "+keyAction+" keyCode: "+keyCode+" Char: "+event.getCharacters());				
+			if(keyAction==KeyEvent.ACTION_UP)for (int ii = 0; ii < pressTime; ii++) {
+				inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
 			}
-			if(event.getCharacters()!=null&&!event.getCharacters().equals("测试")){
-				_keyCodeTest = !_keyCodeTest;
-			}
-
 			return true;
 		}
 
 	    return super.dispatchKeyEvent(event);
 	}
-	private int _keyCode = 0;
-	private boolean _keyCodeTest = false;
 
     /*
 	@Override

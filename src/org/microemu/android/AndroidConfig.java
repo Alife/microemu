@@ -99,6 +99,8 @@ public class AndroidConfig {
 	@Summary("单位秒")
 	@Entries(value={1,2,3,4,5},names={"1秒","2秒","3秒","4秒","5秒"})
 	public static int Setting_LongPressTimeout = 3;
+	@Title("直输界面启用数字键")
+	public static boolean Setting_SupportNumKey = false;
     
 
 }
