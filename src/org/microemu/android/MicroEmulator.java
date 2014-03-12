@@ -194,6 +194,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
     protected void onPause() {
         super.onPause();
         
+        if(config.Setting_PauseAppOnPause){
         if (contentView != null) {
             if (contentView instanceof AndroidRepaintListener) {
                 ((AndroidRepaintListener) contentView).onPause();
@@ -204,6 +205,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         if (ma != null) {
             ma.pauseApp();
             ma.getDisplayAccess().hideNotify();
+        }
         }
     }
 

@@ -101,6 +101,8 @@ public class AndroidConfig {
 	public static int Setting_LongPressTimeout = 3;
 	@Title("直输界面启用数字键")
 	public static boolean Setting_SupportNumKey = false;
+	@Title("OnPause 时暂停 app")
+	public static boolean Setting_PauseAppOnPause = true;
     
 
 }
