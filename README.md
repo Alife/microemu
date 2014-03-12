@@ -1,8 +1,8 @@
 #source
-This project was forked from [http://code.google.com/p/microemu/]microemu. 
+This project was forked from [microemu](http://code.google.com/p/microemu/). 
 
 #description
-The most modify just for [http://opera-mini.ru/](Opera Mini Mod).
+The most modify just for [Opera Mini Mod](http://opera-mini.ru/).
 
 #update
 * support input Unicode character by third input method on OPM direct input mode.
