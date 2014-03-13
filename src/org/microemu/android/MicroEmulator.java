@@ -674,6 +674,9 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
 	                getWindow().setAttributes(params);  
 	                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
+	        		if (config.Screen_TransparentStatusBar)
+	        			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+	        		else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 	            } else {  
 	                android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
 	                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 

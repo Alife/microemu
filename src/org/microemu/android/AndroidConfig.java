@@ -103,6 +103,8 @@ public class AndroidConfig {
 	public static boolean Setting_SupportNumKey = false;
 	@Title("OnPause 时暂停 app")
 	public static boolean Setting_PauseAppOnPause = true;
+	@Title("透明通知栏")
+	public static boolean Screen_TransparentStatusBar = true;
     
 
 }
