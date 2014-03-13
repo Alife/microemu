@@ -357,16 +357,20 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 			else { // keyAction==KeyEvent.ACTION_MULTIPLE
 				inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
 				// support Chinese character
-				if(event.getCharacters().length()>1){
+				if(event.getCharacters()!=null&&event.getCharacters().length()>1){
 					for (int i = 1; i < event.getCharacters().length(); i++) {
 						int secondKeyCode = event.getCharacters().charAt(i);
 						inputMethod.buttonPressed(secondKeyCode).buttonReleased(secondKeyCode);
 					}
 				}
 			}
-			if(keyAction==KeyEvent.ACTION_UP)for (int ii = 0; ii < pressTime; ii++) {
-				inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
-			}
+				if(keyAction==KeyEvent.ACTION_UP&&pressTime>0){
+					for (int ii = 0; ii < pressTime; ii++) {
+						inputMethod.buttonPressed(keyCode).buttonReleased(keyCode);
+					}
+					// support input number twice 
+					dispatchKeyEvent(new KeyEvent(KeyEvent.KEYCODE_DPAD_RIGHT, KeyEvent.KEYCODE_DPAD_RIGHT));
+				}
 			return true;
 		}
 

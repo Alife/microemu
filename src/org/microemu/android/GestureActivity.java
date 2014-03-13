@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.microemu.android.view.MySurfaceView;
 
-import com.opera.mini.mod422.*;
+import com.opera.mini.mod422.R;
 
 import android.app.Activity;
 import android.gesture.Gesture;
@@ -21,6 +21,7 @@ import android.os.Environment;
 import android.view.MotionEvent;
 import android.widget.EditText;
 import android.widget.TextView;
+
 
 /**
  *@author Himi
