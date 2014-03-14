@@ -35,8 +35,13 @@
         <activity
             android:name="org.microemu.android.SettingsActivity"
             android:configChanges="keyboardHidden|orientation"
-            android:label="Settings"
+            android:label="OPM Settings"
             android:theme="@android:style/Theme.NoTitleBar" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
         </activity>
         <activity
             android:name="org.microemu.android.WebViewActivity"
@@ -54,6 +59,7 @@
                 <data android:mimeType="text/html" />
                 <data android:mimeType="text/plain" />
                 <data android:mimeType="application/xhtml+xml" />
+
                 -->
 
             </intent-filter>

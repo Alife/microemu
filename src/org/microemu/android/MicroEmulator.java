@@ -659,6 +659,8 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             if(config.Setting_LongPressOpen){
             	android.util.Log.i(LOG_TAG, "config: Setting_LongPressTimeout "+config.Setting_LongPressTimeout);
             	android.util.Log.i(LOG_TAG, "runnable: postDelayed ");
+            	// delay begin after longPress, so dalay time must reduce the longpress time(about one second)
+            	// so define the Setting_LongPressTimeout default value = 0
             	handler.postDelayed(runnable, (long) (config.Setting_LongPressTimeout*1000));//每两秒执行一次runnable
             }
         }
