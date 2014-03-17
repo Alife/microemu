@@ -195,9 +195,9 @@ public abstract class MicroEmulatorActivity extends Activity {
                 try {
                 	Uri uri = Uri.parse(url);
                 	Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    String type ="*/*";
                 	if(uri.getScheme().startsWith("file")){
                 	String extension = MimeTypeMap.getFileExtensionFromUrl(url);
-                    String type ="*/*";
 					if (extension != null) {
                         type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
                     }
@@ -206,16 +206,23 @@ public abstract class MicroEmulatorActivity extends Activity {
 					    type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
 					}
 					if(type==null) type="text/plain";
-					intent.setType(type);
-                	Log.i(MicroEmulator.LOG_TAG, "platformRequest "+url +" type:"+type);
+					if(extension.equals("apk"))
+						intent = new Intent();  
+						intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  
+						intent.setAction(android.content.Intent.ACTION_VIEW);  
+						intent.setDataAndType(uri, type);
+	                	startActivity(intent);
+	                	return true;
                 	}
+            		Log.i(MicroEmulator.LOG_TAG, "platformRequest "+url +" type:"+type);
+					intent.setType(type);
                 	startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     throw new ConnectionNotFoundException(e.getMessage());
                 }
                 return true;
             }
-        };
+ 	       };
 		
 		activityThread = Thread.currentThread();
 	}
