@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.microedition.io.ConnectionNotFoundException;
@@ -134,7 +135,7 @@ public abstract class MicroEmulatorActivity extends Activity {
 			//setTitle("aaa");
 		windowFullscreen=config.Screen_DefaultFull;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-    	android.util.Log.i(MicroEmulator.LOG_TAG, "config: Fullscreen "+config.Screen_DefaultFull);
+    	//android.util.Log.i(MicroEmulator.LOG_TAG, "config: Fullscreen "+config.Screen_DefaultFull);
 		statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
 
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
@@ -193,29 +194,20 @@ public abstract class MicroEmulatorActivity extends Activity {
             public boolean platformRequest(String url) throws ConnectionNotFoundException 
             {
                 try {
+                	Intent intent = new Intent(Intent.ACTION_VIEW);
                 	Uri uri = Uri.parse(url);
-                	Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-                    String type ="*/*";
                 	if(uri.getScheme().startsWith("file")){
-                	String extension = MimeTypeMap.getFileExtensionFromUrl(url);
-					if (extension != null) {
-                        type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-                    }
-					if(type==null){/* 取得扩展名 */  
-						extension=url.substring(url.lastIndexOf(".")+1,url.length()).toLowerCase(); 
-					    type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
-					}
-					if(type==null) type="text/plain";
-					if(extension.equals("apk"))
-						intent = new Intent();  
-						intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);  
-						intent.setAction(android.content.Intent.ACTION_VIEW);  
+	                    String type ="";
+	                	String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+						if(extension==null||extension.equals(""))/* 取得扩展名 */  
+							extension=url.substring(url.lastIndexOf(".")+1,url.length()).toLowerCase(); 
+	                    type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+						if(type==null&&MIME_MapTable.containsKey(extension)){type = MIME_MapTable.get(extension);}
+						if(type==null){type = "text/plain";}
+						if(extension.equals("apk"))intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 						intent.setDataAndType(uri, type);
-	                	startActivity(intent);
-	                	return true;
-                	}
-            		Log.i(MicroEmulator.LOG_TAG, "platformRequest "+url +" type:"+type);
-					intent.setType(type);
+                	}else intent.setData(uri);
+            		Log.i(MicroEmulator.LOG_TAG, "platformRequest "+intent.getDataString() +" type:"+intent.getType());
                 	startActivity(intent);
                 } catch (ActivityNotFoundException e) {
                     throw new ConnectionNotFoundException(e.getMessage());
@@ -354,4 +346,72 @@ public abstract class MicroEmulatorActivity extends Activity {
 		return t;
 	}
 
+	//建立一个MIME类型与文件后缀名的匹配表
+	private static final HashMap<String, String> MIME_MapTable = new HashMap<String, String>(){{
+	    //{后缀名，    MIME类型}
+		put("3gp","video/3gpp");
+		put("apk","application/vnd.android.package-archive");
+		put("asf","video/x-ms-asf");
+		put("avi","video/x-msvideo");
+		put("bin","application/octet-stream");
+		put("bmp","image/bmp");
+		put("c","text/plain");
+		put("class","application/octet-stream");
+		put("conf","text/plain");
+		put("cpp","text/plain");
+		put("doc","application/msword");
+		put("exe","application/octet-stream");
+		put("gif","image/gif");
+		put("gtar","application/x-gtar");
+		put("gz","application/x-gzip");
+		put("h","text/plain");
+		put("htm","text/html");
+		put("html","text/html");
+		put("jad","text/vnd.sun.j2me.app-descriptor");
+		put("jar","application/java-archive");
+		put("java","text/plain");
+		put("jpeg","image/jpeg");
+		put("jpg","image/jpeg");
+		put("js","application/x-javascript");
+		put("log","text/plain");
+		put("m3u","audio/x-mpegurl");
+		put("m4a","audio/mp4a-latm");
+		put("m4b","audio/mp4a-latm");
+		put("m4p","audio/mp4a-latm");
+		put("m4u","video/vnd.mpegurl");
+		put("m4v","video/x-m4v");
+		put("mov","video/quicktime");
+		put("mp2","audio/x-mpeg");
+		put("mp3","audio/x-mpeg");
+		put("mp4","video/mp4");
+		put("mpc","application/vnd.mpohun.certificate");
+		put("mpe","video/mpeg");
+		put("mpeg","video/mpeg");
+		put("mpg","video/mpeg");
+		put("mpg4","video/mp4");
+		put("mpga","audio/mpeg");
+		put("msg","application/vnd.ms-outlook");
+		put("ogg","audio/ogg");
+		put("pdf","application/pdf");
+		put("png","image/png");
+		put("pps","application/vnd.ms-powerpoint");
+		put("ppt","application/vnd.ms-powerpoint");
+		put("prop","text/plain");
+		put("rar","application/x-rar-compressed");
+		put("rc","text/plain");
+		put("rmvb","audio/x-pn-realaudio");
+		put("rtf","application/rtf");
+		put("sh","text/plain");
+		put("tar","application/x-tar");
+		put("tgz","application/x-compressed");
+		put("txt","text/plain");
+		put("wav","audio/x-wav");
+		put("wma","audio/x-ms-wma");
+		put("wmv","audio/x-ms-wmv");
+		put("wps","application/vnd.ms-works");
+		put("xml","text/xml");
+		put("xml","text/plain");
+		put("z","application/x-compress");
+		put("zip","application/zip");
+	}};
 }
