@@ -88,8 +88,8 @@ public abstract class MicroEmulatorActivity extends Activity {
 	 * execute switch screen onResume except first time
 	 */
 	protected boolean isFirstResume = true;
-    int width = 0;
-    int height = 0;
+	int width = 0;
+	int height = 0;
 
 	protected boolean added = false;
 
@@ -97,10 +97,10 @@ public abstract class MicroEmulatorActivity extends Activity {
 	public void setConfig(AndroidConfig config) {
 		MicroEmulatorActivity.config = config;
 	}
-    
-    public EmulatorContext getEmulatorContext() {
-        return emulatorContext;
-    }
+
+	public EmulatorContext getEmulatorContext() {
+		return emulatorContext;
+	}
 
 	public boolean post(Runnable r) {
 		if (activityThread == Thread.currentThread()) {
@@ -128,93 +128,93 @@ public abstract class MicroEmulatorActivity extends Activity {
 	protected void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
 		setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
-	    // Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+		// Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
 		//TypedArray ta = getTheme().obtainStyledAttributes(new int[] { android.R.attr.windowFullscreen });
 		//requestWindowFeature(Window.FEATURE_NO_TITLE);
 		//windowFullscreen = ta.getBoolean(0, false);
 			//setTitle("aaa");
 		windowFullscreen=config.Screen_DefaultFull;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
-    	//android.util.Log.i(MicroEmulator.LOG_TAG, "config: Fullscreen "+config.Screen_DefaultFull);
+		//android.util.Log.i(MicroEmulator.LOG_TAG, "config: Fullscreen "+config.Screen_DefaultFull);
 		statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
 
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
-                           WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+						   WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 		
-        display = getWindowManager().getDefaultDisplay();
-        
-        width = display.getWidth();
-        height = display.getHeight();
+		display = getWindowManager().getDefaultDisplay();
 
-        emulatorContext = new EmulatorContext() {
+		width = display.getWidth();
+		height = display.getHeight();
 
-            private InputMethod inputMethod = new AndroidInputMethod();
+		emulatorContext = new EmulatorContext() {
 
-            private DeviceDisplay deviceDisplay = new AndroidDeviceDisplay(MicroEmulatorActivity.this, this, width, height);
-            
-            private FontManager fontManager = new AndroidFontManager(getResources().getDisplayMetrics());
+			private InputMethod inputMethod = new AndroidInputMethod();
 
-            public DisplayComponent getDisplayComponent() {
-                // TODO consider removal of EmulatorContext.getDisplayComponent()
-                System.out.println("MicroEmulator.emulatorContext::getDisplayComponent()");
-                return null;
-            }
+			private DeviceDisplay deviceDisplay = new AndroidDeviceDisplay(MicroEmulatorActivity.this, this, width, height);
 
-            public InputMethod getDeviceInputMethod() {
-                return inputMethod;
-            }
+			private FontManager fontManager = new AndroidFontManager(getResources().getDisplayMetrics());
 
-            public DeviceDisplay getDeviceDisplay() {
-                return deviceDisplay;
-            }
+			public DisplayComponent getDisplayComponent() {
+				// TODO consider removal of EmulatorContext.getDisplayComponent()
+				System.out.println("MicroEmulator.emulatorContext::getDisplayComponent()");
+				return null;
+			}
 
-            public FontManager getDeviceFontManager() {
-                return fontManager;
-            }
+			public InputMethod getDeviceInputMethod() {
+				return inputMethod;
+			}
 
-            public InputStream getResourceAsStream(Class origClass, String name) {
-                try {
-                    if (name.startsWith("/")) {
-                        return MicroEmulatorActivity.this.getAssets().open(name.substring(1));
-                    } else {
-                        Package p = origClass.getPackage();
-                        if (p == null) {
-                            return MicroEmulatorActivity.this.getAssets().open(name);
-                        } else {
-                        	String folder = origClass.getPackage().getName().replace('.', '/');
-                            return MicroEmulatorActivity.this.getAssets().open(folder + "/" + name);
-                        }
-                    }
-                } catch (IOException e) {
-                    Logger.debug(e);
-                    return null;
-                }
-            }
+			public DeviceDisplay getDeviceDisplay() {
+				return deviceDisplay;
+			}
 
-            public boolean platformRequest(String url) throws ConnectionNotFoundException 
-            {
-                try {
-                	Intent intent = new Intent(Intent.ACTION_VIEW);
-                	Uri uri = Uri.parse(url);
-                	if(uri.getScheme().startsWith("file")){
-	                    String type ="";
-	                	String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+			public FontManager getDeviceFontManager() {
+				return fontManager;
+			}
+
+			public InputStream getResourceAsStream(Class origClass, String name) {
+				try {
+					if (name.startsWith("/")) {
+						return MicroEmulatorActivity.this.getAssets().open(name.substring(1));
+					} else {
+						Package p = origClass.getPackage();
+						if (p == null) {
+							return MicroEmulatorActivity.this.getAssets().open(name);
+						} else {
+							String folder = origClass.getPackage().getName().replace('.', '/');
+							return MicroEmulatorActivity.this.getAssets().open(folder + "/" + name);
+						}
+					}
+				} catch (IOException e) {
+					Logger.debug(e);
+					return null;
+				}
+			}
+
+			public boolean platformRequest(String url) throws ConnectionNotFoundException
+			{
+				try {
+					Intent intent = new Intent(Intent.ACTION_VIEW);
+					Uri uri = Uri.parse(url);
+					if(uri.getScheme().startsWith("file")){
+						String type ="";
+						String extension = MimeTypeMap.getFileExtensionFromUrl(url);
 						if(extension==null||extension.equals(""))/* 取得扩展名 */  
 							extension=url.substring(url.lastIndexOf(".")+1,url.length()).toLowerCase(); 
-	                    type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+						type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
 						if(type==null&&MIME_MapTable.containsKey(extension)){type = MIME_MapTable.get(extension);}
 						if(type==null){type = "text/plain";}
-						if(extension.equals("apk"))intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						if(extension.equalsIgnoreCase("apk"))intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 						intent.setDataAndType(uri, type);
-                	}else intent.setData(uri);
-            		Log.i(MicroEmulator.LOG_TAG, "platformRequest "+intent.getDataString() +" type:"+intent.getType());
-                	startActivity(intent);
-                } catch (ActivityNotFoundException e) {
-                    throw new ConnectionNotFoundException(e.getMessage());
-                }
-                return true;
-            }
- 	       };
+					}else intent.setData(uri);
+					Log.i(MicroEmulator.LOG_TAG, "platformRequest "+intent.getDataString() +" type:"+intent.getType());
+					startActivity(intent);
+				} catch (ActivityNotFoundException e) {
+					throw new ConnectionNotFoundException(e.getMessage());
+				}
+				return true;
+			}
+		   };
 		
 		activityThread = Thread.currentThread();
 	}
@@ -241,13 +241,13 @@ public abstract class MicroEmulatorActivity extends Activity {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-			        post(new Runnable() {
-			            public void run() {
-			            	LayoutParams params = new WindowManager.LayoutParams();
-			            	params.x = !windowFullscreen?statusBarHeight:0;
-						    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
-			            }
-			        });
+					post(new Runnable() {
+						public void run() {
+							LayoutParams params = new WindowManager.LayoutParams();
+							params.x = !windowFullscreen?statusBarHeight:0;
+							getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
+						}
+					});
 				}
 			}.start();
 		}
@@ -348,7 +348,7 @@ public abstract class MicroEmulatorActivity extends Activity {
 
 	//建立一个MIME类型与文件后缀名的匹配表
 	private static final HashMap<String, String> MIME_MapTable = new HashMap<String, String>(){{
-	    //{后缀名，    MIME类型}
+		//{后缀名，    MIME类型}
 		put("3gp","video/3gpp");
 		put("apk","application/vnd.android.package-archive");
 		put("asf","video/x-ms-asf");
