@@ -1,4 +1,4 @@
-package org.microemu.android.annotation;
+package org.android.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,8 +7,9 @@ import java.lang.annotation.Target;
 
 @Target({ ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME) 
-public @interface Summary {
+public @interface Entries {
 
-	public String value();
-	
+	public int[] value();
+	public String[] names();
+		
 }

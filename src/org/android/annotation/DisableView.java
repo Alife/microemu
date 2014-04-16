@@ -1,4 +1,4 @@
-package org.microemu.android.annotation;
+package org.android.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,8 +7,4 @@ import java.lang.annotation.Target;
 
 @Target({ ElementType.TYPE,ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME) 
-public @interface Title {
-
-	public String value();
-	
-}
+public @interface DisableView {}

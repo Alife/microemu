@@ -35,6 +35,7 @@ import org.microemu.android.MicroEmulatorActivity;
 import org.microemu.android.device.AndroidDeviceDisplay;
 import org.microemu.android.device.AndroidDisplayGraphics;
 import org.microemu.android.device.AndroidInputMethod;
+import org.microemu.android.util.AndroidRepaintListener;
 import org.microemu.android.util.Overlay;
 import org.microemu.app.ui.DisplayRepaintListener;
 import org.microemu.device.Device;
@@ -50,12 +51,9 @@ import android.text.InputType;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.SurfaceView;
-
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import org.microemu.android.util.AndroidRepaintListener;
 
 public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {   
     

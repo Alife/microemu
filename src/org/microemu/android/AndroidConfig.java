@@ -26,10 +26,10 @@
 
 package org.microemu.android;
 
-import org.microemu.android.annotation.DisableView;
-import org.microemu.android.annotation.Entries;
-import org.microemu.android.annotation.Summary;
-import org.microemu.android.annotation.Title;
+import org.android.annotation.DisableView;
+import org.android.annotation.Entries;
+import org.android.annotation.Summary;
+import org.android.annotation.Title;
 
 @Title("settings")
 public class AndroidConfig {

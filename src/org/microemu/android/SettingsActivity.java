@@ -4,11 +4,11 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Date;
 
-import org.microemu.android.annotation.DisableView;
-import org.microemu.android.annotation.Entries;
-import org.microemu.android.annotation.Summary;
-import org.microemu.android.annotation.Title;
-import org.microemu.android.util.Tools;
+import org.android.annotation.DisableView;
+import org.android.annotation.Entries;
+import org.android.annotation.Summary;
+import org.android.annotation.Title;
+import org.android.util.Tools;
 
 import com.opera.mini.mod422.R;
 

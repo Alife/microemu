@@ -36,9 +36,9 @@ import java.util.Iterator;
 
 import javax.microedition.io.ConnectionNotFoundException;
 
+import org.android.annotation.DisableView;
+import org.android.annotation.Entries;
 import org.microemu.DisplayComponent;
-import org.microemu.android.annotation.DisableView;
-import org.microemu.android.annotation.Entries;
 import org.microemu.android.device.AndroidDeviceDisplay;
 import org.microemu.android.device.AndroidFontManager;
 import org.microemu.android.device.AndroidInputMethod;
@@ -205,6 +205,9 @@ public abstract class MicroEmulatorActivity extends Activity {
 						if(type==null&&MIME_MapTable.containsKey(extension)){type = MIME_MapTable.get(extension);}
 						if(type==null){type = "text/plain";}
 						if(extension.equalsIgnoreCase("apk"))intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+						//setType 调用后设置 mimeType，然后将 data 置为 null；
+						//setData 调用后设置 data，然后将 mimeType 置为 null；
+						//setDataAndType 调用后才会同时设置 data 与 mimeType。
 						intent.setDataAndType(uri, type);
 					}else intent.setData(uri);
 					Log.i(MicroEmulator.LOG_TAG, "platformRequest "+intent.getDataString() +" type:"+intent.getType());

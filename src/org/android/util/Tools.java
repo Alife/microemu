@@ -1,4 +1,4 @@
-package org.microemu.android.util;
+package org.android.util;
 
 import java.util.List;
 
