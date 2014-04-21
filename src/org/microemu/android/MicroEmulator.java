@@ -27,7 +27,6 @@
 package org.microemu.android;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -35,8 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Vector;
 
-import javax.microedition.lcdui.Canvas;
 import javax.microedition.lcdui.Command;
 import javax.microedition.midlet.MIDlet;
 import javax.microedition.midlet.MIDletStateChangeException;
@@ -58,10 +57,12 @@ import org.microemu.device.Device;
 import org.microemu.device.DeviceFactory;
 import org.microemu.device.ui.CommandUI;
 import org.microemu.log.Logger;
+import org.microemu.util.JadMidletEntry;
 import org.microemu.util.JadProperties;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -91,7 +92,8 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	AndroidDisplayableUI ui;
 
 	/** Called when the activity is first created. */
-    @Override
+    @SuppressWarnings("unchecked")
+	@Override
     public void onCreate(Bundle icicle) {
         super.onCreate(icicle);
 		
@@ -100,9 +102,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         Logger.addAppender(new AndroidLoggerAppender());
         
         System.setOut(new PrintStream(new OutputStream() {
-        	
         	StringBuffer line = new StringBuffer();
-                                     
 			@Override
 			public void write(int oneByte) throws IOException {
 				if (((char) oneByte) == '\n') {
@@ -110,17 +110,12 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 					if (line.length() > 0) {
 						line.delete(0, line.length() - 1);
 					}
-				} else {
-					line.append((char) oneByte);
-				}
+				} else {line.append((char) oneByte);}
 			}
-        	
         }));
         
         System.setErr(new PrintStream(new OutputStream() {
-        	
         	StringBuffer line = new StringBuffer();
-
 			@Override
 			public void write(int oneByte) throws IOException {
 				if (((char) oneByte) == '\n') {
@@ -128,34 +123,28 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 					if (line.length() > 0) {
 						line.delete(0, line.length() - 1);
 					}
-				} else {
-					line.append((char) oneByte);
-				}
+				} else {line.append((char) oneByte);}
 			}
-        	
         }));
         
         java.util.List<String> params = new ArrayList<String>();
         params.add("--usesystemclassloader");
         params.add("--quit");
         
+        common = new Common(emulatorContext);
         String midletClassName;
-        String jadName = null;
 		try {
-			Class<?> r = Class.forName(getComponentName().getPackageName() + ".R$string");
-	        midletClassName = getResources().getString(r.getField("class_name").getInt(null));
-            try {
-                jadName = getResources().getString(r.getField("jad_name").getInt(null));
-            } catch (NoSuchFieldException e) {
-            }
-
+	        common.jad = new JadProperties();
+	        common.jad.read(getAssets().open(AndroidConfig.MANIFEST));
+	        Vector<JadMidletEntry> midlets=common.jad.getMidletEntries();
+	        if (midlets==null||midlets.size()==0) throw new Exception("can't find MIDlet in Assets/META-INF/MANIFEST.MF ");
+	        midletClassName=(midlets.get(0)).getClassName();
 	        params.add(midletClassName);	       
 		} catch (Exception e) {
 			Logger.error(e);
 			return;
 		}
 
-        common = new Common(emulatorContext);
         common.setRecordStoreManager(new AndroidRecordStoreManager(this));
         common.setDevice(new AndroidDevice(emulatorContext, this));        
         common.initParams(params, null, AndroidDevice.class);
@@ -168,33 +157,24 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         /* JSR-75 */
         Map<String, String> properties = new HashMap<String, String>();
         properties.put("fsRoot", "/");
+        // comment for show all file system on directory is '/'
         //properties.put("fsSingle", "/");
         common.registerImplementation("org.microemu.cldc.file.FileSystem", properties, false);
         MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.read", 1);
         MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.write", 1);
         System.setProperty("fileconn.dir.photos", "file://sdcard/");
 
-        if (jadName != null) {
-            try {
-    	        InputStream is = getAssets().open(jadName);
-    	        common.jad = new JadProperties();
-    	        common.jad.read(is);
-            } catch (Exception e) {
-            	Logger.error(e);
-            }
-        }
-        
         initializeExtensions();
         
         common.setSuiteName(midletClassName);
         midlet = common.initMIDlet(false);
 
     }
-    @Override
+	@Override
     protected void onPause() {
         super.onPause();
         
-        if(config.Setting_PauseAppOnPause){
+        if(AndroidConfig.Setting_PauseAppOnPause){
         if (contentView != null) {
             if (contentView instanceof AndroidRepaintListener) {
                 ((AndroidRepaintListener) contentView).onPause();
@@ -211,6 +191,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 
 	@Override
 	public void setContentView(View view) {
+		view.setBackgroundColor(Color.WHITE);
 		super.setContentView(view);
         view.setOnTouchListener(this);
 	}
@@ -243,7 +224,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
                         }
                     });
                 }
-                
+
 		        if(!isFirstResume&&!windowFullscreen)
 		        	post(new Runnable() {
 			            public void run() {
@@ -262,9 +243,33 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 
     private boolean ignoreBackKeyUp = false;
 
+	int menuClickTime = 0;
     @Override
 	public boolean dispatchKeyEvent(KeyEvent event) {
 		int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
+    	
+		if(keyAction==KeyEvent.ACTION_DOWN&&keyCode==KeyEvent.KEYCODE_MENU){
+		menuClickTime++;
+		if(menuClickTime==3){
+			Intent intent = getIntent();
+			intent.setClass(MicroEmulator.this,SettingsActivity.class);
+			startActivity(intent);menuClickTime=0;
+		}else if(menuClickTime==2){
+			new Thread("menuClickTime"){
+				@Override
+				public void run() {	
+					try {
+						Thread.sleep(1000);
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+					post(new Runnable() {
+			            public void run() {menuClickTime=0;}
+			        });
+				}
+			}.start();
+		}}
+		
         if (ignoreKey(keyCode)) {return super.dispatchKeyEvent(event);}	
         MIDletAccess ma = MIDletBridge.getMIDletAccess();
 		if (ma == null) {return false;}
@@ -313,7 +318,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		}
 				
 		int pressTime = 0;
-		if(config.Setting_SupportNumKey){
+		if(AndroidConfig.Setting_SupportNumKey){
 		// support Num KeyEvent for opera mini mod
 		if(keyCode==KeyEvent.KEYCODE_0){pressTime=10;}
 		else if(keyCode==KeyEvent.KEYCODE_1)pressTime=21;
@@ -559,7 +564,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		
 		return super.onTrackballEvent(event);
 	}	
-	
+
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		super.onPrepareOptionsMenu(menu);
@@ -656,12 +661,12 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             //android.util.Log.i(LOG_TAG, "onLongPress");
             // 2. 启动计时器
         	//android.util.Log.i(LOG_TAG, "config: Setting_LongPressOpen "+config.Setting_LongPressOpen);
-            if(config.Setting_LongPressOpen){
+            if(AndroidConfig.Setting_LongPressOpen){
             	//android.util.Log.i(LOG_TAG, "config: Setting_LongPressTimeout "+config.Setting_LongPressTimeout);
             	//android.util.Log.i(LOG_TAG, "runnable: postDelayed ");
             	// delay begin after longPress, so dalay time must reduce the longpress time(about one second)
             	// so define the Setting_LongPressTimeout default value = 0
-            	handler.postDelayed(runnable, (long) (config.Setting_LongPressTimeout*1000));//每两秒执行一次runnable
+            	handler.postDelayed(runnable, (long) (AndroidConfig.Setting_LongPressTimeout*1000));//每两秒执行一次runnable
             }
         }
     
@@ -671,7 +676,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             //android.util.Log.i(LOG_TAG, "onDoubleTap");
             
             //android.util.Log.i(LOG_TAG, "config: FullscreenChange "+config.Screen_SwitchOnDoubleTap);      	
-            if(config.Screen_SwitchOnDoubleTap){
+            if(AndroidConfig.Screen_SwitchOnDoubleTap){
 	            windowFullscreen = !windowFullscreen;
 	            LayoutParams params = null;
 	            params  = getWindow().getAttributes();  
@@ -680,7 +685,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
 	                getWindow().setAttributes(params);  
 	                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
-	        		if (config.Screen_TransparentStatusBar)
+	        		if (AndroidConfig.Screen_TransparentStatusBar)
 	        			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 	        		else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 	            } else {  
@@ -757,21 +762,21 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 
 	@Override
 	public boolean onTouch(final View paramView, MotionEvent event) {
-		 String name = "";
-		 switch (event.getAction()) {
-		     case MotionEvent.ACTION_DOWN: {
-		         name = "ACTION_DOWN";
-		         break;
-		     }
-		     case MotionEvent.ACTION_MOVE: {
-		         name = "ACTION_MOVE";
-		         break;
-		     }
-		     case MotionEvent.ACTION_UP: {
-		         name = "ACTION_UP";
-		         break;
-		     }
-		 }   
+//		 String name = "";
+//		 switch (event.getAction()) {
+//		     case MotionEvent.ACTION_DOWN: {
+//		         name = "ACTION_DOWN";
+//		         break;
+//		     }
+//		     case MotionEvent.ACTION_MOVE: {
+//		         name = "ACTION_MOVE";
+//		         break;
+//		     }
+//		     case MotionEvent.ACTION_UP: {
+//		         name = "ACTION_UP";
+//		         break;
+//		     }
+//		 }   
 		 switch (event.getAction()) {
 		     case MotionEvent.ACTION_DOWN: {
 		         break;
@@ -787,8 +792,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		 return gesture.onTouchEvent(event);
 	}
 	
-	
-	 //Settings设置界面返回的结果  
+	//Settings设置界面返回的结果  
     int REQ_SYSTEM_SETTINGS=0;
     protected  void onActivityResult(int requestCode, int resultCode, Intent data) {  
 		if(requestCode == REQ_SYSTEM_SETTINGS)  
@@ -797,12 +801,8 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 			setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
 		    //打印结果  
             Log.v(LOG_TAG, "onActivityResult");  
-        }  
-        else  
-        {  
-        	int a = Canvas.KEY_NUM0;
-            //其他Intent返回的结果
-        }  
-    }  
+        } 
+    }
+
 }
 

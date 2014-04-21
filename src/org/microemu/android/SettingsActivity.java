@@ -9,8 +9,7 @@ import org.android.annotation.Entries;
 import org.android.annotation.Summary;
 import org.android.annotation.Title;
 import org.android.util.Tools;
-
-import com.opera.mini.mod422.R;
+import org.microemu.opm422.R;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;

@@ -1,0 +1,92 @@
+[L]
+0 0\n
+1.,/:_-~%$?=&!#*@;'\"|
+2abc2
+3def3
+4ghi4
+5jkl5
+6mno6
+7pqrs7
+8tuv8
+9wxyz9
+*+()<>[]{}^
+#
+[LC]
+0 0\n
+1.,/:_-~%$?=&!#*@;'\"|
+2abc2абвг
+3def3деёжз
+4ghi4ийкл
+5jkl5мноп
+6mno6рсту
+7pqrs7фхцч
+8tuv8шщъы
+9wxyz9ьэюя
+*+()<>[]{}^
+#
+[CL]
+0 0\n
+1.,/:_-~%$?=&!#*@;'\"|
+2абвг2abc
+3деёжз3def
+4ийкл4ghi
+5мноп5jkl
+6рсту6mno
+7фхцч7pqrs
+8шщъы8tuv
+9ьэюя9wxyz
+*+()<>[]{}^
+#
+[C]
+0 0\n
+1.,/:_-~%$?=&!#*@;'\"|
+2абвг2
+3деёжз3
+4ийкл4
+5мноп5
+6рсту6
+7фхцч7
+8шщъы8
+9ьэюя9
+*+()<>[]{}^
+#
+[N]
+00+
+11
+22
+33
+44
+55
+66
+77
+88
+99
+**
+##
+[VKEY2]
+[L]
+qE1MwE2MeE3MrE4MtE5MyE6MuE7MiE8MoE9MpE0M
+aE!MsE@MdE#MfE$MgE%MhE&MjE*MkE?MlE/M
+SMzE_MxE"McE'MvE(MbE)MnE-MmE+MBM
+CMNMUM M.E;M/E:MRM
+[C]
+йMцMуMкMеMнMгMшMщMзMхM
+фMыMвMаMпMрMоMлMдMжMэM
+SMяMчMсMмMиMтMьMбMюMBM
+LMNM M,M.MёMъMRM
+[U]
+åMäMáMàMãMâMéMèMêMëM
+öMóMòMôMøMíMìMîMïM
+SMúMùMûMüMñMýMçMBM
+LMNMUM MßMæMRM
+[N]
+1M2M3M4M5M6M7M8M9M0M
+(M)M+M*M=M&M_M-M'M/M
+YM"M@M?M!M;M:M,MBM
+LMNM M%M#MRM
+[Y]
+§M$M£MâM¥M¤M<M>M[M]M
+{M}M^M\M~M®M©M¦M|M
+YM:)M;)M:(M:'(M:oM:PM:$MBM
+LMNM M%)M:!MRM
+[/VKEY2]

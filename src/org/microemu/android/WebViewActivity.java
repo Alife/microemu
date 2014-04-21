@@ -9,7 +9,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Toast;
 
-import com.opera.mini.mod422.R;
+import org.microemu.opm422.R;
  
 public class WebViewActivity extends Activity{
 	private WebView webView;

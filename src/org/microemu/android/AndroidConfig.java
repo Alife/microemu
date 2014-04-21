@@ -33,11 +33,13 @@ import org.android.annotation.Title;
 
 @Title("settings")
 public class AndroidConfig {
+
+	@DisableView()
+    public static final String MANIFEST = "META-INF/MANIFEST.MF";
 	
 	/**
 	 * Font size definitions
 	 */
-
 	@Title("字体")
 	public Font Font = new Font();
 	
@@ -89,7 +91,7 @@ public class AndroidConfig {
     public static int ORIG_DISPLAY_HEIGHT = 320;
 	@Title("默认全屏")
 	@Summary("仅启动时生效。")
-    public static boolean Screen_DefaultFull = true;
+    public static boolean Screen_DefaultFull = false;
 	@Title("双击切换全屏")
     public static boolean Screen_SwitchOnDoubleTap = true;
 	@Title("长按调出设置页面")

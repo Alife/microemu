@@ -26,6 +26,8 @@
 
 package org.microemu.android.device.ui;
 
+import java.util.Date;
+
 import javax.microedition.lcdui.Canvas;
 
 import org.microemu.DisplayAccess;
@@ -57,7 +59,7 @@ import android.view.inputmethod.InputConnection;
 
 public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {   
     
-    private AndroidDisplayGraphics gameCanvasGraphics = null;   
+    private static AndroidDisplayGraphics gameCanvasGraphics = null;   
     
     private static Bitmap gameCanvasBitmap = null;
 	//View viewCanvas;
@@ -65,10 +67,10 @@ public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {
     public AndroidCanvasUI(final MicroEmulatorActivity activity, Canvas canvas) {
         super(activity, canvas, false);
        
-        
         activity.post(new Runnable() {
             public void run() {
                 view = new CanvasView(activity, AndroidCanvasUI.this);
+                view.setId(view.hashCode());
 				//viewCanvas.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
 				//LinearLayout layout = new LinearLayout(activity);
 				//view=layout;
@@ -116,7 +118,7 @@ public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {
     // CanvasUI
     //
     
-    public class CanvasView extends View implements DisplayRepaintListener {
+    public static class CanvasView extends View implements DisplayRepaintListener  {
         
         private final static int FIRST_DRAG_SENSITIVITY_X = 5;
         
@@ -130,12 +132,17 @@ public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {
         
         private Overlay overlay = null;
         
-        private Matrix scale = new Matrix();
+        private static Matrix scale = new Matrix();
 
         private AndroidKeyListener keyListener = null;
         
         private int inputType = InputType.TYPE_CLASS_TEXT;
-
+   
+        private static final AndroidDisplayGraphics graphics = new AndroidDisplayGraphics();
+		private static MIDletAccess ma;
+		static DisplayAccess da;
+		static AndroidDeviceDisplay deviceDisplay;
+		
         public CanvasView(Context context, AndroidCanvasUI ui) {
             super(context);
             this.ui = ui;            
@@ -148,8 +155,11 @@ public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {
                 return false;
             }
         });*/
+            if (ma == null) {ma = MIDletBridge.getMIDletAccess();}
+            if (da==null)da=ma.getDisplayAccess();
+            if (deviceDisplay==null)deviceDisplay = (AndroidDeviceDisplay) DeviceFactory.getDevice().getDeviceDisplay();
         }
-        
+   
         public AndroidCanvasUI getUI() {
             return ui;
         }             
@@ -227,48 +237,63 @@ public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {
         // View
         //
 		@Override
-        	public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-		outAttrs.imeOptions |=
-			EditorInfo.IME_FLAG_NO_EXTRACT_UI |
-			EditorInfo.IME_FLAG_NO_ENTER_ACTION |
-			EditorInfo.IME_ACTION_NONE;
-		outAttrs.inputType = EditorInfo.TYPE_NULL;
-		return new BaseInputConnection(this, false) {
-			@Override
-			public boolean deleteSurroundingText (int leftLength, int rightLength) {
-				if (rightLength == 0 && leftLength == 0) {
-					return this.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+        public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+			outAttrs.imeOptions |=
+				EditorInfo.IME_FLAG_NO_EXTRACT_UI |
+				EditorInfo.IME_FLAG_NO_ENTER_ACTION |
+				EditorInfo.IME_ACTION_NONE;
+			outAttrs.inputType = EditorInfo.TYPE_NULL;
+			return new BaseInputConnection(this, false) {
+				@Override
+				public boolean deleteSurroundingText (int leftLength, int rightLength) {
+					if (rightLength == 0 && leftLength == 0) {
+						return this.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+					}
+					for (int i = 0; i < leftLength; i++) {
+						this.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
+					}
+					// TODO: forward delete
+					return true;
 				}
-				for (int i = 0; i < leftLength; i++) {
-					this.sendKeyEvent(new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DEL));
-				}
-				// TODO: forward delete
-				return true;
-			}
-		};
-	}
-        @Override
-        public void onDraw(android.graphics.Canvas androidCanvas) {
-            super.onDraw(androidCanvas);
-            MIDletAccess ma = MIDletBridge.getMIDletAccess();
-            if (ma == null) {
-                return;
-            }
-        	AndroidDisplayGraphics graphics = new AndroidDisplayGraphics();
-        	Matrix originalMatrix = androidCanvas.getMatrix();
+			};
+		}
+		
+		Date startData = new Date();
+
+		@Override
+		public void onDraw(android.graphics.Canvas androidCanvas) {
+			super.onDraw(androidCanvas);
+			_draw(androidCanvas,"onDraw");
+		}  
+
+		@Override
+		public void draw(android.graphics.Canvas androidCanvas) {
+			super.draw(androidCanvas);
+			_draw(androidCanvas, "draw");
+		}
+//		@Override
+//		public void dispatchDraw(android.graphics.Canvas androidCanvas) {
+//			super.dispatchDraw(androidCanvas);
+//			_draw(androidCanvas, "dispatchDraw");
+//		}
+        public void _draw(android.graphics.Canvas androidCanvas,String methord) {
+            startData = new Date();
+            //if (ma == null) {ma = MIDletBridge.getMIDletAccess();}
+//        	Matrix originalMatrix = androidCanvas.getMatrix();
             graphics.reset(androidCanvas);
-            if (gameCanvasGraphics != null) {
-            	androidCanvas.drawBitmap(gameCanvasBitmap, scale, null);
-            }
+            if (gameCanvasGraphics != null) {androidCanvas.drawBitmap(gameCanvasBitmap, scale, null);}
             androidCanvas.setMatrix(scale);
-			AndroidDeviceDisplay deviceDisplay = (AndroidDeviceDisplay) DeviceFactory.getDevice().getDeviceDisplay();
+//			AndroidDeviceDisplay deviceDisplay = (AndroidDeviceDisplay) DeviceFactory.getDevice().getDeviceDisplay();
             androidCanvas.clipRect(0, 0, deviceDisplay.getFullWidth(), deviceDisplay.getFullHeight(), Region.Op.REPLACE);
-            ma.getDisplayAccess().paint(graphics);
+            //Log.i(VIEW_LOG_TAG, msg+" paint 1");
+//            ma.getDisplayAccess().paint(graphics);
+            da.paint(graphics);
             if (overlay != null) {
-            	androidCanvas.setMatrix(originalMatrix);
+            	androidCanvas.setMatrix(androidCanvas.getMatrix());
             	androidCanvas.clipRect(0, 0, getWidth(), getHeight(), Region.Op.REPLACE);
                 overlay.onDraw(androidCanvas);
             }
+            //Log.i(VIEW_LOG_TAG, (new Date().getTime() - startData.getTime()) + " "+methord);
         }   
         
 		@Override
@@ -349,7 +374,5 @@ public class AndroidCanvasUI extends AndroidDisplayableUI implements CanvasUI {
         {
             this.repaintListener = repaintListener;
         }
-
     }
-
 }
