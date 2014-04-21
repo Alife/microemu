@@ -1,4 +1,4 @@
-@if not defined Java_Home call ../.path.bat
+@if not defined Java_Home call .path.bat
 @set microemulator_dir=microemulator.git\microemulator
 @rem set jarfile=%1 
 @set jarfile=Opera Mini 4.22
