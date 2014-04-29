@@ -106,7 +106,8 @@ public class AndroidConfig {
 	@Title("OnPause 时暂停 app")
 	public static boolean Setting_PauseAppOnPause = true;
 	@Title("透明通知栏")
-	public static boolean Screen_TransparentStatusBar = true;
+	@Summary("4.0 以上无效")
+	public static boolean Screen_TransparentStatusBar = false;
     
 
 }

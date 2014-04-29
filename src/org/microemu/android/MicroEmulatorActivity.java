@@ -63,7 +63,6 @@ import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.WindowManager.LayoutParams;
 import android.webkit.MimeTypeMap;
 
 public abstract class MicroEmulatorActivity extends Activity {
@@ -133,11 +132,12 @@ public abstract class MicroEmulatorActivity extends Activity {
 		//requestWindowFeature(Window.FEATURE_NO_TITLE);
 		//windowFullscreen = ta.getBoolean(0, false);
 			//setTitle("aaa");
-		windowFullscreen=config.Screen_DefaultFull;
+		windowFullscreen=AndroidConfig.Screen_DefaultFull;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
 		//android.util.Log.i(MicroEmulator.LOG_TAG, "config: Fullscreen "+config.Screen_DefaultFull);
 		statusBarHeight  = phoneCallIcon.getIntrinsicHeight();
 
+    	if(android.os.Build.VERSION.SDK_INT <= 4)
 		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
 						   WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
 		
@@ -233,27 +233,6 @@ public abstract class MicroEmulatorActivity extends Activity {
 		super.setContentView(view);
 		
 		contentView = view;
-		
-		if(!windowFullscreen){
-			new Thread("WindowManager"){
-				@Override
-				public void run() {	
-					try {
-						Thread.sleep(1000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					post(new Runnable() {
-						public void run() {
-							LayoutParams params = new WindowManager.LayoutParams();
-							params.x = !windowFullscreen?statusBarHeight:0;
-							getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
-						}
-					});
-				}
-			}.start();
-		}
 	}
 		
 	public void addActivityResultListener(ActivityResultListener listener) {

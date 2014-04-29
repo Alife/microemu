@@ -9,7 +9,6 @@ import org.android.annotation.Entries;
 import org.android.annotation.Summary;
 import org.android.annotation.Title;
 import org.android.util.Tools;
-import org.microemu.opm422.R;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -34,9 +33,8 @@ public class SettingsActivity extends PreferenceActivity {
 		super.onCreate(paramBundle);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		panel = new RelativeLayout(this);
-		addPreferencesFromResource(R.xml.settings);
-		preferenceScreen = getPreferenceScreen();
-		preferenceScreen.removeAll();
+		preferenceScreen = getPreferenceManager().createPreferenceScreen(this);
+		setPreferenceScreen(preferenceScreen);
 		
 		AddPreference(new AndroidConfig());
 	}

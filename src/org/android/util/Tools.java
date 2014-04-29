@@ -1,5 +1,6 @@
 package org.android.util;
 
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -605,4 +606,7 @@ public class Tools {
 //		return dateFormat.format(date);
 //	}
 
+	public static InputStream getResourceAsStream(Class<?> class1,String resName) {
+		return class1.getResourceAsStream(resName);
+	}
 }

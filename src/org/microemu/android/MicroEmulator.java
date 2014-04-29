@@ -43,6 +43,7 @@ import javax.microedition.midlet.MIDletStateChangeException;
 import org.microemu.DisplayAccess;
 import org.microemu.MIDletAccess;
 import org.microemu.MIDletBridge;
+import org.microemu.MIDletEntry;
 import org.microemu.android.device.AndroidDevice;
 import org.microemu.android.device.AndroidInputMethod;
 import org.microemu.android.device.ui.AndroidCanvasUI;
@@ -52,6 +53,7 @@ import org.microemu.android.util.AndroidLoggerAppender;
 import org.microemu.android.util.AndroidRecordStoreManager;
 import org.microemu.android.util.AndroidRepaintListener;
 import org.microemu.app.Common;
+import org.microemu.app.launcher.Launcher;
 import org.microemu.app.util.MIDletSystemProperties;
 import org.microemu.device.Device;
 import org.microemu.device.DeviceFactory;
@@ -62,7 +64,6 @@ import org.microemu.util.JadProperties;
 
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -132,19 +133,20 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         params.add("--quit");
         
         common = new Common(emulatorContext);
-        String midletClassName;
-		try {
+        String midletClassName=Launcher.class.getName();
+        Vector<JadMidletEntry> midlets = null;
+        try {
 	        common.jad = new JadProperties();
 	        common.jad.read(getAssets().open(AndroidConfig.MANIFEST));
-	        Vector<JadMidletEntry> midlets=common.jad.getMidletEntries();
-	        if (midlets==null||midlets.size()==0) throw new Exception("can't find MIDlet in Assets/META-INF/MANIFEST.MF ");
-	        midletClassName=(midlets.get(0)).getClassName();
-	        params.add(midletClassName);	       
+	        midlets=common.jad.getMidletEntries();
+	        if (midlets!=null&&midlets.size()==1){
+	        	midletClassName=(midlets.get(0)).getClassName();
+	        	params.add(midletClassName);
+	        }	       
 		} catch (Exception e) {
 			Logger.error(e);
-			return;
 		}
-
+		
         common.setRecordStoreManager(new AndroidRecordStoreManager(this));
         common.setDevice(new AndroidDevice(emulatorContext, this));        
         common.initParams(params, null, AndroidDevice.class);
@@ -167,6 +169,15 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
         initializeExtensions();
         
         common.setSuiteName(midletClassName);
+        
+        if(midlets!=null&&midlets.size()>1) 
+	        for (JadMidletEntry jadEntry : midlets) { 
+	        	Class<?> midletClass;
+				try {midletClass = Class.forName(jadEntry.getClassName());} 
+				catch (ClassNotFoundException e) {continue;}
+				MIDletEntry entry=new MIDletEntry(jadEntry.getName(), midletClass);
+				Launcher.addMIDletEntry(entry);
+	    }       
         midlet = common.initMIDlet(false);
 
     }
@@ -191,9 +202,13 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 
 	@Override
 	public void setContentView(View view) {
-		view.setBackgroundColor(Color.WHITE);
+		//view.setBackgroundColor(Color.WHITE);
 		super.setContentView(view);
         view.setOnTouchListener(this);
+		
+		if(!windowFullscreen){
+            switchFullScreen(windowFullscreen,2);
+		}
 	}
 
 	@Override
@@ -676,37 +691,8 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
             //android.util.Log.i(LOG_TAG, "onDoubleTap");
             
             //android.util.Log.i(LOG_TAG, "config: FullscreenChange "+config.Screen_SwitchOnDoubleTap);      	
-            if(AndroidConfig.Screen_SwitchOnDoubleTap){
-	            windowFullscreen = !windowFullscreen;
-	            LayoutParams params = null;
-	            params  = getWindow().getAttributes();  
-				if (windowFullscreen) {  
-		            android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
-	                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
-	                getWindow().setAttributes(params);  
-	                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
-	        		if (AndroidConfig.Screen_TransparentStatusBar)
-	        			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-	        		else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
-	            } else {  
-	                android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
-	                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
-	                getWindow().setAttributes(params);  
-	                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-        		new Thread("WindowManager"){
-        			@Override
-        			public void run() {				
-		        post(new Runnable() {
-		            public void run() {
-		                LayoutParams params = new WindowManager.LayoutParams();
-		                params.x = windowFullscreen?statusBarHeight:0;
-					    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
-		            }
-		        });
-        			}
-        		}.start();
-	            } 
-            }
+    		windowFullscreen = !windowFullscreen;
+            switchFullScreen(windowFullscreen,0);
 			
         	return super.onDoubleTap(e);
         }
@@ -792,6 +778,42 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 		 return gesture.onTouchEvent(event);
 	}
 	
+	public void switchFullScreen(final boolean windowFullscreen, final int i) {
+		if(AndroidConfig.Screen_SwitchOnDoubleTap){
+        	if(android.os.Build.VERSION.SDK_INT <= 4){
+    		if (AndroidConfig.Screen_TransparentStatusBar)
+    			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+    		else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        	}
+
+            final LayoutParams params = getWindow().getAttributes();  
+			if (windowFullscreen) {  
+	            android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
+                params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
+                getWindow().setAttributes(params);  
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
+            } else {  
+    		new Thread("WindowManager"){
+    			@Override
+    			public void run() {	
+    				try {Thread.sleep(1000*i);} catch (InterruptedException e) {}
+	        post(new Runnable() {
+	            public void run() {
+	                android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
+	                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
+	                getWindow().setAttributes(params);  
+	                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+	                LayoutParams params = new WindowManager.LayoutParams();
+	                params.x = windowFullscreen?statusBarHeight:0;
+				    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
+	            }
+	        });
+    			}
+    		}.start();
+            } 
+        }
+	}
+
 	//Settings设置界面返回的结果  
     int REQ_SYSTEM_SETTINGS=0;
     protected  void onActivityResult(int requestCode, int resultCode, Intent data) {  
