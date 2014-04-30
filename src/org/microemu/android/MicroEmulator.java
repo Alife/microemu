@@ -214,7 +214,7 @@ public class MicroEmulator extends MicroEmulatorActivity implements OnTouchListe
 	@Override
     protected void onResume() {
         super.onResume();
-        setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
+        setConfig(getPreferences(config,getSharedPreferences(AndroidConfig.Name, 0)));
 	    
         new Thread(new Runnable() {
 

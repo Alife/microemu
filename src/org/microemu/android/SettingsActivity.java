@@ -33,6 +33,7 @@ public class SettingsActivity extends PreferenceActivity {
 		super.onCreate(paramBundle);
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		panel = new RelativeLayout(this);
+		getPreferenceManager().setSharedPreferencesName(AndroidConfig.Name);
 		preferenceScreen = getPreferenceManager().createPreferenceScreen(this);
 		setPreferenceScreen(preferenceScreen);
 		

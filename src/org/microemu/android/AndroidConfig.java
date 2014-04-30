@@ -36,6 +36,8 @@ public class AndroidConfig {
 
 	@DisableView()
     public static final String MANIFEST = "META-INF/MANIFEST.MF";
+	@DisableView()
+    public static final String Name = "AndroidConfig";
 	
 	/**
 	 * Font size definitions
