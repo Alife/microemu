@@ -9,7 +9,7 @@
     <property name="midlet.package" value="Mini.apk" />
     <property name="midlet.jar" value="opera-mini-4.21.33.jar" /> 
 	<property name="old_package_name" value="com.opera.mini.mod422" /><!-- 工程中的包名-->
-    <property name="new_package_name" value="org.microemu.android." /><!-- 新的包名 -->
+    <property name="new_package_name" value="org.microemu." /><!-- 新的包名 -->
 		
     <property name="sdk-folder" value="/mnt/app/android-sdk-linux_x86" />
 	<property name="sdk-platform-folder" value="${sdk-folder}/platforms/android-3" />
@@ -176,7 +176,7 @@
     	<echo>midlet.class = ${midlet.class}</echo>
 	</target>
 
-    <target name="replaceregexp">
+    <target name="replaceregexp" depends="read-jad">
 	<!--这里会把工程下面的一些需要处理的文件，都复制到temp里 -->
     	<echo>copy src gen AndroidManifest.xml to bin/</echo>
 		<copy todir="${outdir}">
