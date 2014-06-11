@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="org.microemu.opm422"
-    android:versionCode="1404291553"
-    android:versionName="14.04.29.15.53" >
+    android:versionCode="1406041530"
+    android:versionName="14.06.04.15.30" >
 
     <supports-screens
         android:anyDensity="true"
@@ -18,11 +18,11 @@
 
     <application
         android:icon="@drawable/app_icon"
-        android:label="@string/app_name" >
+        android:label="OPM 4.22" >
 
         <!-- <application android:debuggable="true" android:label="@string/app_name" android:icon="@drawable/app_icon"> -->
         <activity
-            android:name="org.microemu.android.MicroEmulator"
+            android:name="org.microemu.android.MEmulator"
             android:configChanges="orientation|keyboardHidden"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
             <intent-filter>
@@ -41,6 +41,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter> -->
         </activity>
+        <activity
+            android:name="per.pqy.apktool.ApkToolActivity" />
     </application>
 
 </manifest>

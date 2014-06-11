@@ -58,7 +58,6 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
@@ -126,7 +125,6 @@ public abstract class MicroEmulatorActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
 		// Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
 		//TypedArray ta = getTheme().obtainStyledAttributes(new int[] { android.R.attr.windowFullscreen });
 		//requestWindowFeature(Window.FEATURE_NO_TITLE);

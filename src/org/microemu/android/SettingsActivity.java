@@ -19,21 +19,17 @@ import android.preference.Preference;
 import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceCategory;
-import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.util.Log;
-import android.widget.RelativeLayout;
 
 public class SettingsActivity extends PreferenceActivity {
-	RelativeLayout panel;
 	SharedPreferences prefs;
 	PreferenceScreen preferenceScreen;
 
 	public void onCreate(Bundle paramBundle) {
 		super.onCreate(paramBundle);
-		prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		panel = new RelativeLayout(this);
 		getPreferenceManager().setSharedPreferencesName(AndroidConfig.Name);
+		prefs = getSharedPreferences(AndroidConfig.Name, 0);
 		preferenceScreen = getPreferenceManager().createPreferenceScreen(this);
 		setPreferenceScreen(preferenceScreen);
 		
@@ -48,6 +44,7 @@ public class SettingsActivity extends PreferenceActivity {
 		String title = Tools.getName(clazz);
 		Title titleAnn = clazz.getAnnotation(Title.class);
 		if(titleAnn!=null)title=titleAnn.value();
+		else return;
 		category.setTitle(title );
 		for (Field field : fields) {
 			DisableView disEnabled = field.getAnnotation(DisableView.class);
@@ -102,7 +99,8 @@ public class SettingsActivity extends PreferenceActivity {
 				preference.setKey(fieldName);
 				titleAnn = field.getAnnotation(Title.class);
 				if(titleAnn!=null)title=titleAnn.value();
-				else title = fieldName;
+				else continue;
+				//else title = fieldName;
 				preference.setTitle(title);
 				String summary = "默认为 ";
 				//if(entries!=null)defaultValue = entries.value()[(Integer)defaultValue];
@@ -116,8 +114,7 @@ public class SettingsActivity extends PreferenceActivity {
 				preference.setOnPreferenceChangeListener(new OnPreferenceChangeListener(){
 
 					@Override
-					public boolean onPreferenceChange(
-							Preference preference, Object paramObject) {
+					public boolean onPreferenceChange(Preference preference, Object paramObject) {
 						String summary = (String) preference.getSummary();
 						summary = summary.substring(0,summary.indexOf("当前为")+3)+" "+paramObject;
 						preference.setSummary(summary);
