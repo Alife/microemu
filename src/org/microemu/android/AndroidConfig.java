@@ -26,90 +26,38 @@
 
 package org.microemu.android;
 
-import org.android.annotation.DisableView;
-import org.android.annotation.Entries;
-import org.android.annotation.Summary;
-import org.android.annotation.Title;
-
-@Title("settings")
 public class AndroidConfig {
-
-	@DisableView()
-    public static final String MANIFEST = "META-INF/MANIFEST.MF";
-	@DisableView()
-    public static final String Name = "AndroidConfig";
 	
 	/**
 	 * Font size definitions
 	 */
-	@Title("字体")
-	public Font Font = new Font();
+
+	public int FONT_SIZE_SMALL = 12;
 	
-	@Title("字体")
-	public class Font{
-		@Title("小号字体")
-		@Entries(value={8,10,12,14,16,18},names={"8","10","12","14","16","18"})
-		public int SIZE_1SMALL = 12;
-		
-		@Title("中号字体")
-		@Entries(value={12,14,16,18,20,22,24,26},names={"12","14","16","18","20","22","24","26"})
-		public int SIZE_2MEDIUM = 16;
-		
-		@Title("大号字体")
-		@Entries(value={16,18,20,22,24,26,28,30,32,34},
-				names={"16","18","20","22","24","26","28","30","32","34"})
-		public int SIZE_3LARGE = 20;
-		
-	}
+	public int FONT_SIZE_MEDIUM = 16;
+	
+	public int FONT_SIZE_LARGE = 20;
 	
 	/**
 	 * Area of the screen used for Canvas, values are in percentage units, eg. 100% = 1
 	 */
 	
-	@DisableView()
-	public static double CANVAS_AREA_LEFT = 0d;
+	public double CANVAS_AREA_LEFT = 0d;
 	
-	@DisableView()
-	public static double CANVAS_AREA_TOP = 0d;
+	public double CANVAS_AREA_TOP = 0d;
 	
-	@DisableView()
-	public static double CANVAS_AREA_RIGHT = 1d;
+	public double CANVAS_AREA_RIGHT = 1d;
 	
-	@DisableView()
-	public static double CANVAS_AREA_BOTTOM = 1d;
+	public double CANVAS_AREA_BOTTOM = 1d;
 	
 	/**
 	 * Use fixed display resolution and rescale if necessary
 	 */
 	
-	@Title("屏幕固定大小")
-	@DisableView()
-    public static boolean ORIG_DISPLAY_FIXED = false;
+    public boolean ORIG_DISPLAY_FIXED = false;
     
-	@DisableView()
-    public static int ORIG_DISPLAY_WIDTH = 240;
+    public int ORIG_DISPLAY_WIDTH = 240;
     
-	@DisableView()
-    public static int ORIG_DISPLAY_HEIGHT = 320;
-	@Title("默认全屏")
-	@Summary("仅启动时生效。")
-    public static boolean Screen_DefaultFull = true;
-	@Title("双击切换全屏")
-    public static boolean Screen_SwitchOnDoubleTap = false;
-	@Title("长按调出设置页面")
-	public static boolean Setting_LongPressOpen = false;
-	@Title("长按调出设置的时间")
-	@Summary("单位秒")
-	@Entries(value={1,2,3,4,5},names={"1秒","2秒","3秒","4秒","5秒"})
-	public static int Setting_LongPressTimeout = 1;
-	@Title("直输界面启用数字键")
-	public static boolean Setting_SupportNumKey = false;
-	@Title("OnPause 时暂停 app")
-	@DisableView()
-	public static boolean Setting_PauseAppOnPause = true;
-	@Title("透明通知栏")
-	@Summary("4.0 以上无效")
-	public static boolean Screen_TransparentStatusBar = false;
-    
-
+    public int ORIG_DISPLAY_HEIGHT = 320;
+	
 }

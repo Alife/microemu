@@ -28,12 +28,12 @@ public class SettingsActivity extends PreferenceActivity {
 
 	public void onCreate(Bundle paramBundle) {
 		super.onCreate(paramBundle);
-		getPreferenceManager().setSharedPreferencesName(AndroidConfig.Name);
-		prefs = getSharedPreferences(AndroidConfig.Name, 0);
+		getPreferenceManager().setSharedPreferencesName(Config.Name);
+		prefs = getSharedPreferences(Config.Name, 0);
 		preferenceScreen = getPreferenceManager().createPreferenceScreen(this);
 		setPreferenceScreen(preferenceScreen);
 		
-		AddPreference(new AndroidConfig());
+		AddPreference(new Config());
 	}
 	
 	public <T> void AddPreference(T t) {

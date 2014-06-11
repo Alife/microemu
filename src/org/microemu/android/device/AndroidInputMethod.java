@@ -31,19 +31,18 @@ import javax.microedition.lcdui.Canvas;
 import org.microemu.DisplayAccess;
 import org.microemu.MIDletAccess;
 import org.microemu.MIDletBridge;
-import org.microemu.android.MicroEmulator;
 import org.microemu.device.DeviceFactory;
 import org.microemu.device.InputMethod;
-import android.util.Log;
+
 import android.view.KeyEvent;
 
 public class AndroidInputMethod extends InputMethod {
 
 	private int repeatModeKeyCode = Integer.MAX_VALUE;
 
-	//public void buttonPressed(KeyEvent keyEvent) {
-	//    buttonPressed(getKeyCode(keyEvent));		
-	//}
+	public void buttonPressed(KeyEvent keyEvent) {
+	    buttonPressed(getKeyCode(keyEvent));		
+	}
 	
 	public AndroidInputMethod buttonPressed(int keyCode) {
 		if (DeviceFactory.getDevice().hasRepeatEvents() && inputMethodListener == null) {
@@ -67,9 +66,9 @@ public class AndroidInputMethod extends InputMethod {
 		return this;
 	}
 
-	//public void buttonReleased(KeyEvent keyEvent) {
-	//    buttonReleased(getKeyCode(keyEvent));
-	//}
+	public void buttonReleased(KeyEvent keyEvent) {
+	    buttonReleased(getKeyCode(keyEvent));
+	}
 	
 	public AndroidInputMethod buttonReleased(int keyCode) {
 		if (DeviceFactory.getDevice().hasRepeatEvents() && inputMethodListener == null) {
@@ -281,7 +280,7 @@ public class AndroidInputMethod extends InputMethod {
 		return false;
 	}
 
-	/*private int getKeyCode(KeyEvent keyEvent) {
+	private int getKeyCode(KeyEvent keyEvent) {
 		// TODO implement as lookup table
 		int deviceKeyCode = keyEvent.getKeyCode();
 		
@@ -312,7 +311,7 @@ public class AndroidInputMethod extends InputMethod {
 		
 
 		return resultKeyCode;
-	}*/
+	}
 
 	@Override
 	public void dispose() {

@@ -76,11 +76,11 @@ public class AndroidFontManager implements FontManager
 	    	}
 	    	int size = 0;	    	
 	    	if (meFont.getSize() == Font.SIZE_SMALL) {
-	    		size = MicroEmulatorActivity.config.Font.SIZE_1SMALL;
+	    		size = MicroEmulatorActivity.config.FONT_SIZE_SMALL;
 	    	} else if (meFont.getSize() == Font.SIZE_MEDIUM) {
-	    		size = MicroEmulatorActivity.config.Font.SIZE_2MEDIUM;
+	    		size = MicroEmulatorActivity.config.FONT_SIZE_MEDIUM;
 	    	} else if (meFont.getSize() == Font.SIZE_LARGE) {
-	    		size = MicroEmulatorActivity.config.Font.SIZE_3LARGE;
+	    		size = MicroEmulatorActivity.config.FONT_SIZE_LARGE;
 	    	}
 	    	result = new AndroidFont(Typeface.create(family, style), TypedValue.applyDimension(
                             TypedValue.COMPLEX_UNIT_SP,

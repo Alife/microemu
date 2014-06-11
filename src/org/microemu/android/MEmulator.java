@@ -26,41 +26,49 @@
 
 package org.microemu.android;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Vector;
 
+import javax.microedition.io.ConnectionNotFoundException;
+
+import org.android.annotation.DisableView;
+import org.android.annotation.Entries;
+import org.android.annotation.Title;
 import org.microemu.DisplayAccess;
 import org.microemu.MIDletAccess;
 import org.microemu.MIDletBridge;
+import org.microemu.MIDletEntry;
+import org.microemu.android.device.AndroidDevice;
 import org.microemu.android.device.AndroidInputMethod;
 import org.microemu.android.device.ui.AndroidCanvasUI;
 import org.microemu.android.device.ui.AndroidDisplayableUI;
+import org.microemu.android.util.AndroidRecordStoreManager;
+import org.microemu.app.Common;
+import org.microemu.app.launcher.Launcher;
+import org.microemu.app.util.MIDletSystemProperties;
 import org.microemu.device.Device;
 import org.microemu.device.DeviceFactory;
+import org.microemu.log.Logger;
 import org.microemu.opm422.R;
+import org.microemu.util.JadMidletEntry;
+import org.microemu.util.JadProperties;
 
-import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.ProgressDialog;
-import android.app.Service;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.media.AsyncPlayer;
+import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.Vibrator;
-import android.preference.PreferenceManager;
-import android.text.ClipboardManager;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.GestureDetector.SimpleOnGestureListener;
@@ -74,6 +82,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.GridView;
@@ -83,20 +92,81 @@ import android.widget.Toast;
 
 public class MEmulator extends MicroEmulator implements OnTouchListener {
 
-	static final String menu_setting="setting";
+	static final String menu_setting="设置";
 	static final String menu_scan_sdcard="scan sdcard";
 	static final String menu_apkTool="ApkTool";
 	
 	public static AsyncPlayer bgm = new AsyncPlayer("AsyncPlayer");
 	public static Context context;
+	Config _config = new Config();
+    private boolean isFirstResume=true;
+	int statusBarHeight = 0;
 	
 	@Override
     public void onCreate(Bundle icicle) {
-		setConfig(getPreferences(config,getSharedPreferences(AndroidConfig.Name, 0)));
-        super.onCreate(icicle);
+		//getPreferences(_config,getSharedPreferences(Config.Name, 0));
+		setConfig(getPreferences(_config,getSharedPreferences(Config.Name, 0)));
+        config.FONT_SIZE_SMALL = _config.Font.SIZE_1SMALL;
+        config.FONT_SIZE_MEDIUM = _config.Font.SIZE_2MEDIUM;
+        config.FONT_SIZE_LARGE = _config.Font.SIZE_3LARGE;
        
-        midlet = common.initMIDlet(false);
-    	
+		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
+		if (!windowFullscreen) {
+			statusBarHeight = phoneCallIcon.getIntrinsicHeight();
+		}
+
+		super.onCreate(icicle);
+       
+		 java.util.List<String> params = new ArrayList<String>();
+	        params.add("--usesystemclassloader");
+	        params.add("--quit");
+	        common = new Common(emulatorContext);
+	        String midletClassName=Launcher.class.getName();
+	        Vector<JadMidletEntry> midlets = null;
+	        try {
+		        common.jad = new JadProperties();
+		        common.jad.read(getAssets().open(Config.MANIFEST));
+		        midlets=common.jad.getMidletEntries();
+		        if (midlets!=null&&midlets.size()==1){
+		        	midletClassName=(midlets.get(0)).getClassName();
+		        	params.add(midletClassName);
+		        }	       
+			} catch (Exception e) {
+				Logger.error(e);
+			}
+			
+	        common.setRecordStoreManager(new AndroidRecordStoreManager(this));
+	        common.setDevice(new AndroidDevice(emulatorContext, this));        
+	        common.initParams(params, null, AndroidDevice.class);
+	               
+	        System.setProperty("microedition.platform", "microemu-android");
+	        System.setProperty("microedition.configuration", "CLDC-1.1");
+	        System.setProperty("microedition.profiles", "MIDP-2.0");
+	        System.setProperty("microedition.locale", Locale.getDefault().toString());
+
+	        /* JSR-75 */
+	        Map<String, String> properties = new HashMap<String, String>();
+	        properties.put("fsRoot", "/");
+	        // comment for show all file system on directory is '/'
+	        //properties.put("fsSingle", "/");
+	        common.registerImplementation("org.microemu.cldc.file.FileSystem", properties, false);
+	        MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.read", 1);
+	        MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.write", 1);
+	        System.setProperty("fileconn.dir.photos", "file://sdcard/");
+
+	        initializeExtensions();
+	        
+	        common.setSuiteName(midletClassName);
+	        
+	        if(midlets!=null&&midlets.size()>1) 
+		        for (JadMidletEntry jadEntry : midlets) { 
+		        	Class<?> midletClass;
+					try {midletClass = Class.forName(jadEntry.getClassName());} 
+					catch (ClassNotFoundException e) {continue;}
+					MIDletEntry entry=new MIDletEntry(jadEntry.getName(), midletClass);
+					Launcher.addMIDletEntry(entry);
+		    }       
+	        midlet = common.initMIDlet(false);    	
         context = getApplication();
 //        bgm.play(getApplication(), Uri.fromFile(new File("/sdcard/bgm.mp3")), true, AudioManager.STREAM_MUSIC);
     }
@@ -114,7 +184,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	
 	@Override
     protected void onPause() {
-        if(AndroidConfig.Setting_PauseAppOnPause){
+        if(Config.Setting_PauseAppOnPause){
             super.onPause();
         }
     }
@@ -122,11 +192,11 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	@Override
     protected void onResume() {
         super.onResume();
-        setConfig(getPreferences(config,getSharedPreferences(AndroidConfig.Name, 0)));
+        setConfig(getPreferences(config,getSharedPreferences(Config.Name, 0)));
 	    
         new Thread(new Runnable() {
 
-            public void run()
+			public void run()
             {
 		        if(!isFirstResume&&!windowFullscreen)
 		        	post(new Runnable() {
@@ -196,7 +266,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 				
 		// support Num KeyEvent for opera mini mod
 		int pressTime = 0;
-		if(AndroidConfig.Setting_SupportNumKey){
+		if(Config.Setting_SupportNumKey){
 		if(keyCode==KeyEvent.KEYCODE_0){pressTime=10;}
 		else if(keyCode==KeyEvent.KEYCODE_1)pressTime=21;
 		else if(keyCode>=KeyEvent.KEYCODE_2&&keyCode<=KeyEvent.KEYCODE_6)pressTime=3;
@@ -257,14 +327,26 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 		if(item.getTitle().equals(menu_scan_sdcard)){
 			showFileChooser();
 		}else if(item.getTitle().equals(menu_apkTool)){
-			startActivityForResult(new Intent(MEmulator.this,MEmulator.class), REQ_SYSTEM_SETTINGS);
+//			try {
+//				uri="file:///storage/sdcard0/download/duomi_3.6.0.jar";
+//	            String dexUrl = uri.substring(uri.lastIndexOf("."),uri.length())+"dex";
+//	            MIDletClassLoader midletClassLoader = common.createMIDletClassLoader(true);
+////	            Common.Context = this;
+////	            common.openMIDletUrl(uri, common.createMIDletClassLoader(true));
+//	            midletClassLoader.addURL(new URL(dexUrl));
+////				common.openMIDletUrl(uri);
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+			//startActivityForResult(new Intent(MEmulator.this,ApkToolActivity.class), REQ_SYSTEM_SETTINGS);
 		}else if(item.getTitle().equals(menu_setting)){
-	        startActivityForResult(new Intent(MEmulator.this,SettingsActivity.class), REQ_SYSTEM_SETTINGS);
+	        startActivity(new Intent(MEmulator.this,SettingsActivity.class));
 		}
-
 		return result;
 	}
 	
+    private final static KeyEvent KEY_RIGHT_DOWN_EVENT = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_RIGHT);
+    private final static KeyEvent KEY_DOWN_UP_EVENT = new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_DPAD_DOWN);
 	// http://www.cnblogs.com/sw926/p/3208158.html
 	class MyGesture extends SimpleOnGestureListener {
 
@@ -302,13 +384,13 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
             //android.util.Log.i(LOG_TAG, "onLongPress");
             // 2. 启动计时器
         	//android.util.Log.i(LOG_TAG, "config: Setting_LongPressOpen "+config.Setting_LongPressOpen);
-            if(AndroidConfig.Setting_LongPressOpen){
+            //if(Config.Setting_LongPressOpen){
             	//android.util.Log.i(LOG_TAG, "config: Setting_LongPressTimeout "+config.Setting_LongPressTimeout);
             	//android.util.Log.i(LOG_TAG, "runnable: postDelayed ");
             	// delay begin after longPress, so dalay time must reduce the longpress time(about one second)
             	// so define the Setting_LongPressTimeout default value = 0
-            	handler.postDelayed(runnable, (long) (AndroidConfig.Setting_LongPressTimeout*1000));//每两秒执行一次runnable
-            }
+            	//handler.postDelayed(runnable, (long) (Config.Setting_LongPressTimeout*1000));//每两秒执行一次runnable
+            //}
         }
     
         // 长按，触摸屏按下后既不抬起也不移动，由多个 ACTION_DOWN触发
@@ -363,13 +445,13 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	
 	private GestureDetector gesture=new GestureDetector(new MyGesture ());
 
-	Handler handler=new Handler(); 
-	Runnable runnable=new Runnable() { 
-	    @Override
-	    public void run() { 
-	        startActivityForResult(new Intent(MEmulator.this,SettingsActivity.class), REQ_SYSTEM_SETTINGS);
-	    } 
-	};
+//	Handler handler=new Handler(); 
+//	Runnable runnable=new Runnable() { 
+//	    @Override
+//	    public void run() { 
+//	        startActivityForResult(new Intent(MEmulator.this,SettingsActivity.class), REQ_SYSTEM_SETTINGS);
+//	    } 
+//	};
 
 	@Override
 	public boolean onTouch(final View paramView, MotionEvent event) {
@@ -396,7 +478,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 		     case MotionEvent.ACTION_UP:
 	            // 3. 停止计时器
 	        	//android.util.Log.i(LOG_TAG, "runnable: removeCallbacks");
-	            handler.removeCallbacks(runnable); 
+	            //handler.removeCallbacks(runnable); 
 		         break;
 	     }
 		 //android.util.Log.i(LOG_TAG, "onTouch Action" + name);
@@ -404,9 +486,9 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	}
 	
 	public void switchFullScreen(final boolean windowFullscreen, final int i) {
-		if(AndroidConfig.Screen_SwitchOnDoubleTap){
+		if(Config.Screen_SwitchOnDoubleTap){
         	if(android.os.Build.VERSION.SDK_INT <= 4){
-    		if (AndroidConfig.Screen_TransparentStatusBar)
+    		if (Config.Screen_TransparentStatusBar)
     			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
     		else getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         	}
@@ -495,8 +577,6 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	{
 		boolean v= super.onPrepareOptionsMenu(pmenu);
 		pmenu.add(menu_setting);
-//		pmenu.add(menu_scan_sdcard);
-//		pmenu.add(menu_apkTool);
 		this.menu = pmenu;
 	    creatMenuGird();//初如化网格布局菜单
 	    menuAdapter.notifyDataSetChanged();
@@ -506,10 +586,11 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	//拦截系统默认菜单
 	@Override
 	public boolean onMenuOpened(int featureId, Menu menu){
-		if (menuDialog == null)menuDialog = new AlertDialog.Builder(this).setView(menuView).show();
-		else menuDialog.show();
+		if(Config.Setting_CusomMenu)
+			if (menuDialog == null)menuDialog = new AlertDialog.Builder(this).setView(menuView).show();
+			else menuDialog.show();
 		//返回true为系统菜单，返回false为用户自己定义菜单
-		return false;
+		return !Config.Setting_CusomMenu;
 	}
 
 	//构建一个适配器
@@ -541,11 +622,161 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 			}
 		}
 	}
+	
+	public <T> T getPreferences(T t,SharedPreferences preferences) {
+		Field[] fields = t.getClass().getFields();
+		for (Field field : fields) {
+			DisableView disEnabled = field.getAnnotation(DisableView.class);
+			if(disEnabled!=null)continue;
+			Class<?> type = field.getType(); 
+			String fieldName=field.getName(); 
+			Title titleAnn = field.getAnnotation(Title.class);
+			if(titleAnn==null)continue;
+			try {
+				Entries entries = field.getAnnotation(Entries.class);
+				if(entries==null){
+					
+					if(type.getPackage()!=null&&!type.getPackage().getName().startsWith("java.lang"))
+						getPreferences(field.get(t),preferences);
+					if(type.equals(String.class)){
+						String value = preferences.getString(fieldName, field.get(t).toString());
+						field.set(t, value);
+					}else if(type.equals(int.class)||type.equals(byte.class)){
+						int value = preferences.getInt(fieldName, field.getInt(t));
+						preferences.getInt(fieldName, Integer.parseInt(field.getInt(t)+""));
+						field.set(t, value);
+					}else if(type.equals(Integer.class)||type.equals(Byte.class)){
+						Integer value = preferences.getInt(fieldName, field.getInt(t));
+						field.set(t, value);
+					}else if(type.equals(boolean.class)){
+						boolean value = preferences.getBoolean(fieldName, field.getBoolean(t));
+						field.set(t, value);
+					}else if(type.equals(Boolean.class)){
+						Boolean value = preferences.getBoolean(fieldName,field.getBoolean(t));
+						field.set(t, value);
+					}else if(type.equals(Date.class)){
+						float value = preferences.getFloat(fieldName, ((Date)field.get(t)).getTime());
+						field.set(t, value);
+					}else if(type.equals(Float.class)||type.equals(float.class)){
+						Float value = preferences.getFloat(fieldName, field.getFloat(t));
+						field.set(t, value);
+					}else if(type.equals(Double.class)||type.equals(double.class)){
+						Float value = preferences.getFloat(fieldName, Float.parseFloat(field.get(t).toString()));
+						field.set(t, value);
+					}else continue;
+				}
+				else {
+					// ListPreference 保存的只能是 String
+					String value = preferences.getString(fieldName, field.get(t).toString());
+					field.set(t, Integer.parseInt(value));
+				}
+			} catch (Exception e) {
+				Log.e("Exception","Exception : "+fieldName);
+				e.printStackTrace();
+			}
+		}
+		return t;
+	}
 
-	//Settings设置界面返回的结果  
-    int REQ_SYSTEM_SETTINGS=0;
+	public boolean _platformRequest(String url) throws ConnectionNotFoundException
+	{
+		try {
+			Intent intent = new Intent(Intent.ACTION_VIEW);
+			Uri uri = Uri.parse(url);
+			if(uri.getScheme().startsWith("file")){
+				String type ="";
+				String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+				if(extension==null||extension.equals(""))/* 取得扩展名 */  
+					extension=url.substring(url.lastIndexOf(".")+1,url.length()).toLowerCase(); 
+				type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension);
+				if(type==null&&MIME_MapTable.containsKey(extension)){type = MIME_MapTable.get(extension);}
+				if(type==null){type = "text/plain";}
+				if(extension.equalsIgnoreCase("apk"))intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				//setType 调用后设置 mimeType，然后将 data 置为 null；
+				//setData 调用后设置 data，然后将 mimeType 置为 null；
+				//setDataAndType 调用后才会同时设置 data 与 mimeType。
+				intent.setDataAndType(uri, type);
+			}else intent.setData(uri);
+			Log.i(MicroEmulator.LOG_TAG, "platformRequest "+intent.getDataString() +" type:"+intent.getType());
+			startActivity(intent);
+		} catch (ActivityNotFoundException e) {
+			throw new ConnectionNotFoundException(e.getMessage());
+		}
+		return true;
+	}
+	//建立一个MIME类型与文件后缀名的匹配表
+	private static final HashMap<String, String> MIME_MapTable = new HashMap<String, String>(){{
+		//{后缀名，    MIME类型}
+		put("3gp","video/3gpp");
+		put("apk","application/vnd.android.package-archive");
+		put("asf","video/x-ms-asf");
+		put("avi","video/x-msvideo");
+		put("bin","application/octet-stream");
+		put("bmp","image/bmp");
+		put("c","text/plain");
+		put("class","application/octet-stream");
+		put("conf","text/plain");
+		put("cpp","text/plain");
+		put("doc","application/msword");
+		put("exe","application/octet-stream");
+		put("gif","image/gif");
+		put("gtar","application/x-gtar");
+		put("gz","application/x-gzip");
+		put("h","text/plain");
+		put("htm","text/html");
+		put("html","text/html");
+		put("jad","text/vnd.sun.j2me.app-descriptor");
+		put("jar","application/java-archive");
+		put("java","text/plain");
+		put("jpeg","image/jpeg");
+		put("jpg","image/jpeg");
+		put("js","application/x-javascript");
+		put("log","text/plain");
+		put("m3u","audio/x-mpegurl");
+		put("m4a","audio/mp4a-latm");
+		put("m4b","audio/mp4a-latm");
+		put("m4p","audio/mp4a-latm");
+		put("m4u","video/vnd.mpegurl");
+		put("m4v","video/x-m4v");
+		put("mov","video/quicktime");
+		put("mp2","audio/x-mpeg");
+		put("mp3","audio/x-mpeg");
+		put("mp4","video/mp4");
+		put("mpc","application/vnd.mpohun.certificate");
+		put("mpe","video/mpeg");
+		put("mpeg","video/mpeg");
+		put("mpg","video/mpeg");
+		put("mpg4","video/mp4");
+		put("mpga","audio/mpeg");
+		put("msg","application/vnd.ms-outlook");
+		put("ogg","audio/ogg");
+		put("pdf","application/pdf");
+		put("png","image/png");
+		put("pps","application/vnd.ms-powerpoint");
+		put("ppt","application/vnd.ms-powerpoint");
+		put("prop","text/plain");
+		put("rar","application/x-rar-compressed");
+		put("rc","text/plain");
+		put("rmvb","audio/x-pn-realaudio");
+		put("rtf","application/rtf");
+		put("sh","text/plain");
+		put("tar","application/x-tar");
+		put("tgz","application/x-compressed");
+		put("txt","text/plain");
+		put("wav","audio/x-wav");
+		put("wma","audio/x-ms-wma");
+		put("wmv","audio/x-ms-wmv");
+		put("wps","application/vnd.ms-works");
+		put("xml","text/xml");
+		put("xml","text/plain");
+		put("z","application/x-compress");
+		put("zip","application/zip");
+	}};
+
+
+	static int count=0;
+
     int FILE_SELECT_CODE=1;
-
 	private Intent intent;
     /** 调用文件选择软件来选择文件 **/  
     private void showFileChooser() {  
@@ -558,133 +789,34 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
             Toast.makeText(this, "请安装文件管理器", Toast.LENGTH_SHORT).show();  
         }  
     } 
-    /** 根据返回选择的文件，来进行上传操作 **/  
     @Override  
     public void onActivityResult(int requestCode, int resultCode, Intent data) {  
-		if(requestCode == REQ_SYSTEM_SETTINGS){  
-            //获取设置界面PreferenceActivity中各个Preference的值  
-			setConfig(getPreferences(config,PreferenceManager.getDefaultSharedPreferences(this)));
-            Log.v(LOG_TAG, "onActivityResult");  
-        }else if (requestCode == FILE_SELECT_CODE) { 
-        	if (resultCode == Activity.RESULT_OK) { 
-	        	String msg = "";
-	        	if(data==null||data.getData()==null)msg="not select jar file";
-	        	else {
-	        		// file:///storage/sdcard1/Java/mini8.jar
-		            uri = data.getData().toString();  
-					Log.i(LOG_TAG, "url " + uri);  
-					String fileName = uri.substring(uri.lastIndexOf("/") + 1);  
-					msg = uri+" "+fileName;
-					final	String command1 = new String(" sh /sdcard/apktool/apktool.sh d -f -r ") 
-					+ uri + " " + uri.substring(0, uri.length()-4) + "_src";
-					//threadWork(this,getString(R.string.decompiling),command1,3);
-	        	}
-	            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();  
-        	}
-        }  
+		showFileChooserResult(requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);  
     }  
-    
-	static int count=0;
-	public String uri;
-	ProgressDialog myDialog;
-	MyHandler myHandler = new MyHandler();
-	class MyHandler extends Handler {	
-		public void doWork(String str,final Bundle b){
-			if(b.getBoolean("isTemp")){
-				myDialog.setMessage(b.getString("op"));
-			}else{
-			SharedPreferences settings = getSharedPreferences("Settings", MODE_PRIVATE);
-			if(settings.getInt("Vib", 0 ) != 0){
-				Vibrator v = (Vibrator) getApplication().getSystemService(Service.VIBRATOR_SERVICE);
-				v.vibrate(new long[]{0,200,100,200},-1);
-			}
-			if(settings.getInt("Noti", 0 ) != 0){
-				NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-				Notification notification = new Notification(R.drawable.ic_launcher,getString(R.string.op_done),System.currentTimeMillis());
-				Context context = getApplicationContext(); 
-				CharSequence contentTitle = b.getString("filename"); 
-				CharSequence contentText =  getString(R.string.op_done); 
-				Intent notificationIntent = MEmulator.this.getIntent();
-				PendingIntent contentIntent = PendingIntent.getActivity(MEmulator.this,0,notificationIntent,0);
-				notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);	
-				notification.flags |= Notification.FLAG_AUTO_CANCEL;				
-				mNotificationManager.notify(count++,notification);				
-			} 	
-			myDialog.dismiss();
-			Toast.makeText(MEmulator.this, str,Toast.LENGTH_LONG).show();
-			AlertDialog.Builder b1 = new AlertDialog.Builder(MEmulator.this);
-			String tmp_str = b.getString("filename")+"\n"+ getString(R.string.cost_time);
-			
-			long time = (System.currentTimeMillis() - b.getLong("time"))/1000;
-			if(time > 3600){
-				tmp_str += Integer.toString((int) (time/3600)) + getString(R.string.hour) + Integer.toString((int) (time%3600)/60) +
-						getString(R.string.minute) + Integer.toString((int) (time%60)) + getString(R.string.second);
-			}
-			else if(time > 60){
-				tmp_str +=  Integer.toString((int) (time%3600)/60) +
-						getString(R.string.minute) + Integer.toString((int) (time%60)) + getString(R.string.second);
-			}
-			else{
-				tmp_str +=  Integer.toString((int) time) + getString(R.string.second);
-			}
-			b1.setTitle(tmp_str)
-			.setMessage(b.getString("output"))
-			.setPositiveButton(getString(R.string.ok), null)
-			.setNeutralButton((getString(R.string.copy)),
-					new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog,
-						int which) {
-					// TODO Auto-generated method stub
-					ClipboardManager cmb = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-					cmb.setText(b.getString("output"));
-				}
-			}).create().show();
-//			currentFiles = currentParent.listFiles();
-//			inflateListView(currentFiles);
-		}
-		}
-		public void handleMessage(Message msg) {
-			super.handleMessage(msg);
-			final Bundle b = msg.getData();
-			switch (b.getInt("what")) {
-			case 0:
-				doWork(getString(R.string.decompile_all_finish),b);
-				break;
-			case 1:
-				doWork(getString(R.string.sign_finish),b);
-				break;
-			case 2:
-				doWork(getString(R.string.recompile_finish),b);
-				break;
-			case 3:
-				doWork(getString(R.string.decompile_dex_finish),b);
-				break;
-			case 4:
-				doWork(getString(R.string.decompile_res_finish),b);
-				break;
-			case 5:
-				doWork(getString(R.string.decompile_odex_finish),b);
-				break;
-			case 6:
-				doWork(getString(R.string.op_done),b);
-				break;
-			case 7:
-				doWork(getString(R.string.import_finish),b);
-				break;
-			case 8:
-				doWork(getString(R.string.align_finish),b);
-				break;
-			case 9:
-				doWork(getString(R.string.add_finish),b);
-				break;
-			case 10:
-				doWork(getString(R.string.delete_finish),b);
-				break;
-			}
-		}
-	}
-
+    /** 根据返回选择的文件，来进行上传操作 **/  
+    public void showFileChooserResult(int requestCode, int resultCode, Intent data) {  
+//		if (requestCode == FILE_SELECT_CODE) { 
+//        	if (resultCode == Activity.RESULT_OK) { 
+//	        	String msg = "";
+//	        	if(data==null||data.getData()==null)msg="not select jar file";
+//	        	else {
+//	        		// file:///storage/sdcard1/Java/mini8.jar
+//		            uri = data.getData().toString();  
+//	        		if(uri.toLowerCase().endsWith(".jar")){
+//					String fileName = uri.substring(uri.lastIndexOf("/") + 1);  
+//					msg = uri+" "+fileName;
+//	        		// file:///storage/sdcard1/Java/mini8.jar
+//					final String command1 = new String(" sh ") 
+//					+ getExternalFilesDir(null) +"/dex2jar/d2j-dex2jar.sh " 
+//					+ uri + " " + uri.substring(0, uri.length()-4) + ".dex";
+//	        		}else if(uri.toLowerCase().endsWith(".dex")){}
+//
+//	        	}
+//	            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();  
+//        	}
+//        }  
+    } 
 }
+
 
