@@ -145,6 +145,7 @@ public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 	}
 
 	public void setString(final String text) {
+		getStringTransfer = text;
 		activity.post(new Runnable() {
 			public void run() {
 				editView.setText(text);
@@ -155,31 +156,32 @@ public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 	private String getStringTransfer;
 
 	public String getString() {
-		if (activity.isActivityThread()) {
-			getStringTransfer = editView.getText().toString();
-		} else {
-			getStringTransfer = null;
-			activity.post(new Runnable() {
-				public void run() {
-					synchronized (AndroidTextFieldUI.this) {
-						getStringTransfer = editView.getText().toString();
-						AndroidTextFieldUI.this.notify();
-					}
-				}
-			});
-
-			synchronized (AndroidTextFieldUI.this) {
-				if (getStringTransfer == null) {
-					try {
-						wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
 		return getStringTransfer;
+//		if (activity.isActivityThread()) {
+//			getStringTransfer = editView.getText().toString();
+//		} else {
+//			getStringTransfer = null;
+//			activity.post(new Runnable() {
+//				public void run() {
+//					synchronized (AndroidTextFieldUI.this) {
+//						getStringTransfer = editView.getText().toString();
+//						AndroidTextFieldUI.this.notify();
+//					}
+//				}
+//			});
+//
+//			synchronized (AndroidTextFieldUI.this) {
+//				if (getStringTransfer == null) {
+//					try {
+//						wait();
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			}
+//		}
+//		
+//		return getStringTransfer;
 	}
 	
 }

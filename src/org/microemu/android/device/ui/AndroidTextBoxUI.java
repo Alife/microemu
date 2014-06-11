@@ -26,9 +26,13 @@
 
 package org.microemu.android.device.ui;
 
+import java.util.List;
+
 import javax.microedition.lcdui.TextBox;
 import javax.microedition.lcdui.TextField;
 
+import org.microemu.DisplayAccess;
+import org.microemu.MIDletBridge;
 import org.microemu.android.MicroEmulatorActivity;
 import org.microemu.device.InputMethod;
 import org.microemu.device.ui.TextBoxUI;
@@ -42,9 +46,12 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.view.Gravity;
+import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 
@@ -73,7 +80,7 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 				};
 				editView.setText(textBox.getString());
 				editView.setGravity(Gravity.TOP);
-				editView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
+				//editView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
 				int constraints = textBox.getConstraints();
 				if ((constraints & TextField.CONSTRAINT_MASK) == TextField.URL) {
 					editView.setSingleLine(true);
@@ -115,6 +122,23 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 				});
 				((LinearLayout) view).addView(editView);
 				
+				editView.setHeight(displayable.getHeight()/2);
+				
+				final DisplayAccess da=MIDletBridge.getMIDletAccess().getDisplayAccess();
+				AndroidDisplayableUI ui = (AndroidDisplayableUI) da.getDisplayableUI(da.getCurrent());
+				List<AndroidCommandUI> commands = ui.getCommandsUI();
+				for (int i = 0; i < commands.size(); i++) {
+					final AndroidCommandUI cmd = commands.get(i);
+					Button v = new Button(activity);
+					v.setText(cmd.getCommand().getLabel());
+					((LinearLayout) view).addView(v);
+					v.setOnClickListener(new OnClickListener() {
+						public void onClick(View v) {
+							da.commandAction(cmd.getCommand(), displayable);
+						}
+					});
+				}
+
 				invalidate();
 			}
 		});		
@@ -141,34 +165,36 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 	private String getStringTransfer;
 
 	public String getString() {
-		if (activity.isActivityThread()) {
-			getStringTransfer = editView.getText().toString();
-		} else {
-			getStringTransfer = null;
-			activity.post(new Runnable() {
-				public void run() {
-					synchronized (AndroidTextBoxUI.this) {
-						getStringTransfer = editView.getText().toString();
-						AndroidTextBoxUI.this.notify();
-					}
-				}
-			});
-
-			synchronized (AndroidTextBoxUI.this) {
-				if (getStringTransfer == null) {
-					try {
-						wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-		}
-		
 		return getStringTransfer;
+//		if (activity.isActivityThread()) {
+//			getStringTransfer = editView.getText().toString();
+//		} else {
+//			getStringTransfer = null;
+//			activity.post(new Runnable() {
+//				public void run() {
+//					synchronized (AndroidTextBoxUI.this) {
+//						getStringTransfer = editView.getText().toString();
+//						AndroidTextBoxUI.this.notify();
+//					}
+//				}
+//			});
+//
+//			synchronized (AndroidTextBoxUI.this) {
+//				if (getStringTransfer == null) {
+//					try {
+//						wait();
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			}
+//		}
+//		
+//		return getStringTransfer;
 	}
 
 	public void setString(final String text) {
+		getStringTransfer = text;
 		activity.post(new Runnable() {
 			public void run() {
 				editView.setText(text);
