@@ -64,6 +64,7 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.media.AsyncPlayer;
@@ -93,19 +94,22 @@ import android.widget.Toast;
 public class MEmulator extends MicroEmulator implements OnTouchListener {
 
 	static final String menu_setting="设置";
-	static final String menu_scan_sdcard="scan sdcard";
-	static final String menu_apkTool="ApkTool";
+//	static final String menu_scan_sdcard="scan sdcard";
+//	static final String menu_apkTool="ApkTool";
 	
 	public static AsyncPlayer bgm = new AsyncPlayer("AsyncPlayer");
 	public static Context context;
 	Config _config = new Config();
     private boolean isFirstResume=true;
 	int statusBarHeight = 0;
+
+	private SharedPreferences pref;
 	
 	@Override
     public void onCreate(Bundle icicle) {
 		//getPreferences(_config,getSharedPreferences(Config.Name, 0));
-		setConfig(getPreferences(_config,getSharedPreferences(Config.Name, 0)));
+		pref=getSharedPreferences(Config.Name, 0);
+		setConfig(getPreferences(_config,pref));
         config.FONT_SIZE_SMALL = _config.Font.SIZE_1SMALL;
         config.FONT_SIZE_MEDIUM = _config.Font.SIZE_2MEDIUM;
         config.FONT_SIZE_LARGE = _config.Font.SIZE_3LARGE;
@@ -116,57 +120,64 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 		}
 
 		super.onCreate(icicle);
+	
+		windowFullscreen=Config.Screen_DefaultFull;
+
+    	if(android.os.Build.VERSION.SDK_INT <= 4)
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, 
+						   WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
        
-		 java.util.List<String> params = new ArrayList<String>();
-	        params.add("--usesystemclassloader");
-	        params.add("--quit");
-	        common = new Common(emulatorContext);
-	        String midletClassName=Launcher.class.getName();
-	        Vector<JadMidletEntry> midlets = null;
-	        try {
-		        common.jad = new JadProperties();
-		        common.jad.read(getAssets().open(Config.MANIFEST));
-		        midlets=common.jad.getMidletEntries();
-		        if (midlets!=null&&midlets.size()==1){
-		        	midletClassName=(midlets.get(0)).getClassName();
-		        	params.add(midletClassName);
-		        }	       
-			} catch (Exception e) {
-				Logger.error(e);
-			}
-			
-	        common.setRecordStoreManager(new AndroidRecordStoreManager(this));
-	        common.setDevice(new AndroidDevice(emulatorContext, this));        
-	        common.initParams(params, null, AndroidDevice.class);
-	               
-	        System.setProperty("microedition.platform", "microemu-android");
-	        System.setProperty("microedition.configuration", "CLDC-1.1");
-	        System.setProperty("microedition.profiles", "MIDP-2.0");
-	        System.setProperty("microedition.locale", Locale.getDefault().toString());
+		java.util.List<String> params = new ArrayList<String>();
+        params.add("--usesystemclassloader");
+        params.add("--quit");
+        common = new Common(emulatorContext);
+        String midletClassName=Launcher.class.getName();
+        Vector<JadMidletEntry> midlets = null;
+        try {
+	        common.jad = new JadProperties();
+	        common.jad.read(getAssets().open(Config.MANIFEST));
+	        midlets=common.jad.getMidletEntries();
+	        if (midlets!=null&&midlets.size()==1){
+	        	midletClassName=(midlets.get(0)).getClassName();
+	        	params.add(midletClassName);
+	        }	       
+		} catch (Exception e) {
+			Logger.error(e);
+		}
+		
+        common.setRecordStoreManager(new AndroidRecordStoreManager(this));
+        common.setDevice(new AndroidDevice(emulatorContext, this));        
+        common.initParams(params, null, AndroidDevice.class);
+               
+        System.setProperty("microedition.platform", "microemu-android");
+        System.setProperty("microedition.configuration", "CLDC-1.1");
+        System.setProperty("microedition.profiles", "MIDP-2.0");
+        System.setProperty("microedition.locale", Locale.getDefault().toString());
 
-	        /* JSR-75 */
-	        Map<String, String> properties = new HashMap<String, String>();
-	        properties.put("fsRoot", "/");
-	        // comment for show all file system on directory is '/'
-	        //properties.put("fsSingle", "/");
-	        common.registerImplementation("org.microemu.cldc.file.FileSystem", properties, false);
-	        MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.read", 1);
-	        MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.write", 1);
-	        System.setProperty("fileconn.dir.photos", "file://sdcard/");
+        /* JSR-75 */
+        Map<String, String> properties = new HashMap<String, String>();
+        properties.put("fsRoot", "/");
+        // comment for show all file system on directory is '/'
+        //properties.put("fsSingle", "/");
+        common.registerImplementation("org.microemu.cldc.file.FileSystem", properties, false);
+        MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.read", 1);
+        MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.write", 1);
+        System.setProperty("fileconn.dir.photos", "file://sdcard/");
 
-	        initializeExtensions();
-	        
-	        common.setSuiteName(midletClassName);
-	        
-	        if(midlets!=null&&midlets.size()>1) 
-		        for (JadMidletEntry jadEntry : midlets) { 
-		        	Class<?> midletClass;
-					try {midletClass = Class.forName(jadEntry.getClassName());} 
-					catch (ClassNotFoundException e) {continue;}
-					MIDletEntry entry=new MIDletEntry(jadEntry.getName(), midletClass);
-					Launcher.addMIDletEntry(entry);
-		    }       
-	        midlet = common.initMIDlet(false);    	
+        initializeExtensions();
+        
+        common.setSuiteName(midletClassName);
+        
+        if(midlets!=null&&midlets.size()>1) 
+	        for (JadMidletEntry jadEntry : midlets) { 
+	        	Class<?> midletClass;
+				try {midletClass = Class.forName(jadEntry.getClassName());} 
+				catch (ClassNotFoundException e) {continue;}
+				MIDletEntry entry=new MIDletEntry(jadEntry.getName(), midletClass);
+				Launcher.addMIDletEntry(entry);
+	    }       
+        midlet = common.initMIDlet(false);
+        
         context = getApplication();
 //        bgm.play(getApplication(), Uri.fromFile(new File("/sdcard/bgm.mp3")), true, AudioManager.STREAM_MUSIC);
     }
@@ -177,9 +188,9 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 		super.setContentView(view);
         view.setOnTouchListener(this);
 		
-		if(!windowFullscreen){
-            switchFullScreen(windowFullscreen,2);
-		}
+//		if(!windowFullscreen){
+//            switchFullScreen(windowFullscreen,2);
+//		}
 	}
 	
 	@Override
@@ -192,23 +203,23 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	@Override
     protected void onResume() {
         super.onResume();
+        
         setConfig(getPreferences(config,getSharedPreferences(Config.Name, 0)));
-	    
-        new Thread(new Runnable() {
-
-			public void run()
-            {
-		        if(!isFirstResume&&!windowFullscreen)
-		        	post(new Runnable() {
-			            public void run() {
-			            	LayoutParams params = new WindowManager.LayoutParams();
-			            	params.x = !windowFullscreen?statusBarHeight:0;
-						    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
-			            }
-			        });
-		    	isFirstResume = false;
-	    	}
-        }).start();
+//        if(isFirstResume&&!windowFullscreen){
+//        new Thread(new Runnable() {
+//			public void run(){
+//	        	postDelayed(new Runnable() {
+//		            public void run() {
+//		            	LayoutParams params = new WindowManager.LayoutParams();
+//		            	params.x = windowFullscreen?0:statusBarHeight;
+//					    getWindowManager().updateViewLayout((View) getWindow().getDecorView(), params);
+//		            }
+//		        },isFirstResume?2000:0);
+//	    	}
+//        },"switchFullScreen onResume");//.start();
+//    	}
+        switchFullScreen(Config.Screen_DefaultFull,isFirstResume?3:0);
+    	isFirstResume = false;
     }
     
 	int menuClickTime = 0;
@@ -288,11 +299,11 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 		if (ui instanceof AndroidCanvasUI) {
 			Device device = DeviceFactory.getDevice();
 			AndroidInputMethod inputMethod = (AndroidInputMethod) device.getInputMethod();
-			if(keyAction==KeyEvent.ACTION_DOWN)inputMethod.buttonPressed(keyCode);
-			else if(keyAction==KeyEvent.ACTION_UP)inputMethod.buttonReleased(keyCode);
-			else { // keyAction==KeyEvent.ACTION_MULTIPLE
-				inputMethod.buttonPressed(keyCode);
-				inputMethod.buttonReleased(keyCode);
+//			if(keyAction==KeyEvent.ACTION_DOWN)inputMethod.buttonPressed(keyCode);
+//			else if(keyAction==KeyEvent.ACTION_UP)inputMethod.buttonReleased(keyCode);
+			if(keyAction==KeyEvent.ACTION_MULTIPLE) {
+//				inputMethod.buttonPressed(keyCode);
+//				inputMethod.buttonReleased(keyCode);
 				// support Chinese character
 				if(event.getCharacters()!=null&&event.getCharacters().length()>1){
 					for (int i = 1; i < event.getCharacters().length(); i++) {
@@ -324,9 +335,9 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		boolean result = super.onOptionsItemSelected(item);
-		if(item.getTitle().equals(menu_scan_sdcard)){
-			showFileChooser();
-		}else if(item.getTitle().equals(menu_apkTool)){
+//		if(item.getTitle().equals(menu_scan_sdcard)){
+//			showFileChooser();
+//		}else if(item.getTitle().equals(menu_apkTool)){
 //			try {
 //				uri="file:///storage/sdcard0/download/duomi_3.6.0.jar";
 //	            String dexUrl = uri.substring(uri.lastIndexOf("."),uri.length())+"dex";
@@ -339,8 +350,9 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 //				e.printStackTrace();
 //			}
 			//startActivityForResult(new Intent(MEmulator.this,ApkToolActivity.class), REQ_SYSTEM_SETTINGS);
-		}else if(item.getTitle().equals(menu_setting)){
-	        startActivity(new Intent(MEmulator.this,SettingsActivity.class));
+//		}else 
+		if(item.getTitle().equals(menu_setting)){
+	        startActivityForResult(new Intent(MEmulator.this,SettingsActivity.class),menu_setting.hashCode());
 		}
 		return result;
 	}
@@ -400,7 +412,10 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
             
             //android.util.Log.i(LOG_TAG, "config: FullscreenChange "+config.Screen_SwitchOnDoubleTap);      	
     		windowFullscreen = !windowFullscreen;
-            switchFullScreen(windowFullscreen,0);
+    		if(Config.Screen_SwitchOnDoubleTap)switchFullScreen(windowFullscreen,0);
+    		Editor editor=pref.edit();
+    		editor.putBoolean("Screen_DefaultFull", windowFullscreen);
+    		editor.commit();
 			
         	return super.onDoubleTap(e);
         }
@@ -486,7 +501,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	}
 	
 	public void switchFullScreen(final boolean windowFullscreen, final int i) {
-		if(Config.Screen_SwitchOnDoubleTap){
+            android.util.Log.i(LOG_TAG, "switchFullScreen "+windowFullscreen+" "+i);      	
         	if(android.os.Build.VERSION.SDK_INT <= 4){
     		if (Config.Screen_TransparentStatusBar)
     			getWindow().addFlags(WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
@@ -506,7 +521,6 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
     				try {Thread.sleep(1000*i);} catch (InterruptedException e) {}
 	        post(new Runnable() {
 	            public void run() {
-	                android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
 	                params.flags &= (~WindowManager.LayoutParams.FLAG_FULLSCREEN); 
 	                getWindow().setAttributes(params);  
 	                getWindow().clearFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
@@ -517,7 +531,6 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	        });
     			}
     		}.start();
-            } 
         }
 	}
 
@@ -791,8 +804,14 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
     } 
     @Override  
     public void onActivityResult(int requestCode, int resultCode, Intent data) {  
-		showFileChooserResult(requestCode, resultCode, data);
         super.onActivityResult(requestCode, resultCode, data);  
+    	if(requestCode==menu_setting.hashCode()){
+            setConfig(getPreferences(config,getSharedPreferences(Config.Name, 0)));
+                switchFullScreen(Config.Screen_DefaultFull,0);
+    	    //if(Config.Screen_DefaultFull!=windowFullscreen)
+    	}else{
+			showFileChooserResult(requestCode, resultCode, data);
+    	}
     }  
     /** 根据返回选择的文件，来进行上传操作 **/  
     public void showFileChooserResult(int requestCode, int resultCode, Intent data) {  

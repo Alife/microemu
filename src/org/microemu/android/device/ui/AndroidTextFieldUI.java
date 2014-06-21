@@ -34,18 +34,24 @@ import org.microemu.android.MicroEmulatorActivity;
 import org.microemu.device.InputMethod;
 import org.microemu.device.ui.TextFieldUI;
 
+import android.content.Context;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Typeface;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 	
-	private MicroEmulatorActivity activity;
+	private static MicroEmulatorActivity activity;
 	
 	private TextView labelView;
 	
@@ -63,7 +69,18 @@ public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 				setFocusableInTouchMode(false);
 		//		setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
 				
-				labelView = new TextView(activity);
+				labelView = new TextView(activity){
+					@Override
+					public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+						Configuration conf = Resources.getSystem().getConfiguration();
+						if (conf.hardKeyboardHidden != Configuration.HARDKEYBOARDHIDDEN_NO) {
+							InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                            imm.showSoftInput(this, 0);
+						}
+						
+						return super.onCreateInputConnection(outAttrs);
+					}
+				};
 				labelView.setFocusable(false);
 				labelView.setFocusableInTouchMode(false);
 				labelView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
@@ -145,6 +162,9 @@ public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 	}
 
 	public void setString(final String text) {
+		if (activity.isActivityThread()) {
+	        editView.setText(text);
+		}
 		activity.post(new Runnable() {
 			public void run() {
 				editView.setText(text);

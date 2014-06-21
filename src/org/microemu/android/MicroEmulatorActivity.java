@@ -50,17 +50,17 @@ import org.microemu.log.Logger;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
+
+
 
 public abstract class MicroEmulatorActivity extends Activity {
 		
@@ -112,11 +112,14 @@ public abstract class MicroEmulatorActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle icicle) {
 		super.onCreate(icicle);
-		
 		// Query the activity property android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-		TypedArray ta = getTheme().obtainStyledAttributes(new int[] { android.R.attr.windowFullscreen });
-		windowFullscreen = ta.getBoolean(0, false);
-		
+		//TypedArray ta = getTheme().obtainStyledAttributes(new int[] { android.R.attr.windowFullscreen });
+		//windowFullscreen = ta.getBoolean(0, false);
+		    //requestWindowFeature(Window.FEATURE_NO_TITLE);
+			//setTitle("aaa");
+    getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+                           WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		//windowFullscreen=true;
 		Drawable phoneCallIcon = getResources().getDrawable(android.R.drawable.stat_sys_phone_call);
 		int statusBarHeight = 0;
 		if (!windowFullscreen) {
@@ -124,8 +127,9 @@ public abstract class MicroEmulatorActivity extends Activity {
 		}
 		
         Display display = getWindowManager().getDefaultDisplay();
+        
         final int width = display.getWidth();
-        final int height = display.getHeight() - statusBarHeight;
+        final int height = display.getHeight();
 
         emulatorContext = new EmulatorContext() {
 
@@ -174,13 +178,7 @@ public abstract class MicroEmulatorActivity extends Activity {
 
             public boolean platformRequest(String url) throws ConnectionNotFoundException 
             {
-                try {
-                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
-                } catch (ActivityNotFoundException e) {
-                    throw new ConnectionNotFoundException();
-                }
-
-                return true;
+                return _platformRequest(url);
             }
                     
         };
@@ -208,11 +206,13 @@ Log.d("AndroidCanvasUI", "set content view: " + view);
 		int statusBarHeight = 0;
 		if (!windowFullscreen) {
 			statusBarHeight = phoneCallIcon.getIntrinsicHeight();
+			//if(newConfig.keyboardHidden == Configuration.KEYBOARDHIDDEN_YES)getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, 
+                          //  WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		}
 		
         Display display = getWindowManager().getDefaultDisplay();
 		AndroidDeviceDisplay deviceDisplay = (AndroidDeviceDisplay) DeviceFactory.getDevice().getDeviceDisplay();
-		deviceDisplay.setSize(display.getWidth(), display.getHeight() - statusBarHeight);
+		deviceDisplay.setSize(display.getWidth(), display.getHeight());
 		MIDletAccess ma = MIDletBridge.getMIDletAccess();
 		if (ma == null) {
 			return;
@@ -257,4 +257,7 @@ Log.d("AndroidCanvasUI", "set content view: " + view);
 		return dialog;
 	}
 	
+	public boolean _platformRequest(String url) throws ConnectionNotFoundException{
+		return true;
+	};
 }

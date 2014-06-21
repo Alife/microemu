@@ -29,7 +29,9 @@ package org.microemu.android.device.ui;
 import javax.microedition.lcdui.TextBox;
 import javax.microedition.lcdui.TextField;
 
+import org.microemu.android.MicroEmulator;
 import org.microemu.android.MicroEmulatorActivity;
+import org.microemu.android.util.Log;
 import org.microemu.device.InputMethod;
 import org.microemu.device.ui.TextBoxUI;
 
@@ -42,6 +44,7 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
@@ -66,10 +69,21 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 							InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
                             imm.showSoftInput(this, 0);
 						}
-						
+						((InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE))
+						.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+
 						return super.onCreateInputConnection(outAttrs);
 					}
-					
+					@Override
+					public boolean dispatchKeyEvent(KeyEvent event) {
+						
+						int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
+						Log.i(MicroEmulator.LOG_TAG, "keyAction:"+keyAction+
+								" keyCode:"+keyCode+
+								" Char:"+unicodeChar);
+
+						return super.dispatchKeyEvent(event);
+					}					
 				};
 				editView.setText(textBox.getString());
 				editView.setGravity(Gravity.TOP);
@@ -116,6 +130,7 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 				((LinearLayout) view).addView(editView);
 				
 				invalidate();
+				textBox.getString();
 			}
 		});		
 	}
@@ -139,10 +154,13 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 	}
 	
 	public String getString() {
-		return editView.getText().toString();
-	}
+        return editView.getText().toString();
+    }
 
-	public void setString(final String text) {
+    public void setString(final String text) {
+		if (activity.isActivityThread()) {
+	        editView.setText(text);
+		}
 		activity.post(new Runnable() {
 			public void run() {
 				editView.setText(text);

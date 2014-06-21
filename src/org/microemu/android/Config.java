@@ -66,13 +66,13 @@ public class Config extends AndroidConfig {
     public static boolean Screen_SwitchOnDoubleTap = false;
 //	@Title("长按调出设置页面")
 //	public static boolean Setting_LongPressOpen = false;
-	@Title("长按调出设置的时间")
-	@Summary("单位秒")
-	@Entries(value={1,2,3,4,5},names={"1秒","2秒","3秒","4秒","5秒"})
-	public static int Setting_LongPressTimeout = 1;
+//	@Title("长按调出设置的时间")
+//	@Summary("单位秒")
+//	@Entries(value={1,2,3,4,5},names={"1秒","2秒","3秒","4秒","5秒"})
+//	public static int Setting_LongPressTimeout = 1;
 	@Title("直输界面启用数字键")
 	public static boolean Setting_SupportNumKey = false;
-	@Title("OnPause 时暂停 app")
+	//@Title("OnPause 时暂停 app")
 	@DisableView()
 	public static boolean Setting_PauseAppOnPause = true;
 	@Title("透明通知栏")

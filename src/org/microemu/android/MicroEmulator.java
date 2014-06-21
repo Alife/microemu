@@ -21,7 +21,7 @@
  *  See the LGPL or the AL for the specific language governing permissions and
  *  limitations.
  *
- *  @version $Id$
+ *  @version $Id: MicroEmulator.java 2517 2011-11-10 12:30:37Z barteo@gmail.com $
  */
 
 package org.microemu.android;
@@ -60,6 +60,7 @@ import org.microemu.device.ui.CommandUI;
 import org.microemu.log.Logger;
 import org.microemu.util.JadProperties;
 
+import android.content.Context;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -67,14 +68,115 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SubMenu;
 import android.view.Window;
-
+//import android.view.WindowManager;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 public class MicroEmulator extends MicroEmulatorActivity {
 	
 	public static final String LOG_TAG = "MicroEmulator";
 		
 	public Common common;
 	
-	protected MIDlet midlet;
+	public MIDlet midlet;
+	
+@Override
+	public boolean dispatchKeyEvent(KeyEvent event) {
+	int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
+            if (ignoreKey(keyCode)) {
+                return super.dispatchKeyEvent(event);    
+            }	
+	MIDletAccess ma = MIDletBridge.getMIDletAccess();
+		if (ma == null) {
+			return false;
+		}
+		final DisplayAccess da = ma.getDisplayAccess();
+		if (da == null) {
+			return false;
+		}
+		AndroidDisplayableUI ui = (AndroidDisplayableUI) da.getDisplayableUI(da.getCurrent());
+		if (ui == null) {
+			return false;
+		}		
+		if(keyAction==KeyEvent.ACTION_DOWN)
+		{
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			List<AndroidCommandUI> commands = ui.getCommandsUI();
+			
+			CommandUI cmd = getFirstCommandOfType(commands, Command.BACK);
+			if (cmd != null) {
+				if (ui.getCommandListener() != null) {
+					ignoreBackKeyUp = true;
+					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+				}
+				return true;
+			}
+
+			cmd = getFirstCommandOfType(commands, Command.EXIT);
+			if (cmd != null) {
+				if (ui.getCommandListener() != null) {
+					ignoreBackKeyUp = true;
+					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+				}
+				return true;
+			}
+			
+			cmd = getFirstCommandOfType(commands, Command.CANCEL);
+			if (cmd != null) {
+				if (ui.getCommandListener() != null) {
+					ignoreBackKeyUp = true;
+					MIDletBridge.getMIDletAccess().getDisplayAccess().commandAction(cmd.getCommand(), da.getCurrent());
+				}
+				return true;
+			}
+		}
+		if (keyCode == KeyEvent.KEYCODE_MENU){
+		//windowFullscreen=false;
+		//getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+			((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE)).toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);return false;}
+		}
+		
+				
+		switch (keyCode) {
+		case KeyEvent.KEYCODE_DPAD_CENTER :
+			keyCode = -5;
+			break;
+		case KeyEvent.KEYCODE_DPAD_UP :
+			keyCode = -1;
+			break;
+		case KeyEvent.KEYCODE_DPAD_DOWN :
+			keyCode = -2;
+			break;
+		case KeyEvent.KEYCODE_DPAD_LEFT :
+			keyCode = -3;
+			break;
+		case KeyEvent.KEYCODE_DPAD_RIGHT :
+			keyCode = -4;
+			break;
+		case KeyEvent.KEYCODE_DEL :
+			keyCode = 127;
+			break;
+		default: 
+            String ch=event.getCharacters();
+			if(ch!=null){if(ch.length()>0)keyCode=(int)ch.charAt(0);} else{if(unicodeChar!=0)keyCode=unicodeChar;else keyCode=-127-keyCode;}
+	}
+    //if(event.getKeyCode()!=0)Log.d("key pressed", String.valueOf(event.getKeyCode()));
+    //else Log.d("key pressed_", String.valueOf((int)(event.getCharacters().toString().charAt(0))));
+
+	
+		if (ui instanceof AndroidCanvasUI) {
+               
+
+			Device device = DeviceFactory.getDevice();
+			if(keyAction==KeyEvent.ACTION_DOWN)((AndroidInputMethod) device.getInputMethod()).buttonPressed(keyCode);
+			else if(keyAction==KeyEvent.ACTION_UP)((AndroidInputMethod) device.getInputMethod()).buttonReleased(keyCode);
+			else {((AndroidInputMethod) device.getInputMethod()).buttonPressed(keyCode);((AndroidInputMethod) device.getInputMethod()).buttonReleased(keyCode);}
+
+			return true;
+		}
+
+    return super.dispatchKeyEvent(event);
+}
+
 
 	/** Called when the activity is first created. */
     @Override
@@ -90,7 +192,7 @@ public class MicroEmulator extends MicroEmulatorActivity {
         System.setOut(new PrintStream(new OutputStream() {
         	
         	StringBuffer line = new StringBuffer();
-
+                                     
 			@Override
 			public void write(int oneByte) throws IOException {
 				if (((char) oneByte) == '\n') {
@@ -158,11 +260,11 @@ public class MicroEmulator extends MicroEmulatorActivity {
         /* JSR-75 */
         Map properties = new HashMap();
         properties.put("fsRoot", "/");
-        properties.put("fsSingle", "sdcard");
+        //properties.put("fsSingle", "/");
         common.registerImplementation("org.microemu.cldc.file.FileSystem", properties, false);
         MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.read", 1);
         MIDletSystemProperties.setPermission("javax.microedition.io.Connector.file.write", 1);
-        System.setProperty("fileconn.dir.photos", "file:///sdcard/");
+        System.setProperty("fileconn.dir.photos", "file://sdcard/");
 
         if (jadName != null) {
             try {
@@ -178,8 +280,8 @@ public class MicroEmulator extends MicroEmulatorActivity {
         
         common.setSuiteName(midletClassName);
         midlet = common.initMIDlet(false);
+        
     }
-
     @Override
     protected void onPause() {
         super.onPause();
@@ -189,7 +291,7 @@ public class MicroEmulator extends MicroEmulatorActivity {
                 ((AndroidRepaintListener) contentView).onPause();
             }
         }
-
+        if(midlet==null)return;
         MIDletAccess ma = MIDletBridge.getMIDletAccess(midlet);
         if (ma != null) {
             ma.pauseApp();
@@ -200,7 +302,7 @@ public class MicroEmulator extends MicroEmulatorActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        
+        if(midlet==null)return;
         new Thread(new Runnable() {
 
             public void run()
@@ -233,7 +335,7 @@ public class MicroEmulator extends MicroEmulatorActivity {
     }
 
     private boolean ignoreBackKeyUp = false;
-    
+    /*
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		MIDletAccess ma = MIDletBridge.getMIDletAccess();
@@ -283,10 +385,11 @@ public class MicroEmulator extends MicroEmulatorActivity {
 		if (ui instanceof AndroidCanvasUI) {
             if (ignoreKey(keyCode)) {
                 return false;    
-            }
+            }                 
 
 			Device device = DeviceFactory.getDevice();
 			((AndroidInputMethod) device.getInputMethod()).buttonPressed(event);
+			Log.d("MicroemuInput","Pressed="+String.valueOf(keyCode));
 
 			return true;
 		}
@@ -321,12 +424,13 @@ public class MicroEmulator extends MicroEmulatorActivity {
 	
 			Device device = DeviceFactory.getDevice();
 			((AndroidInputMethod) device.getInputMethod()).buttonReleased(event);
-	
+			Log.d("MicroemuInput","Released="+String.valueOf(keyCode));
 			return true;
 		}
 
 		return super.onKeyUp(keyCode, event);
-	}
+		
+	}*/
 	
 	private CommandUI getFirstCommandOfType(List<AndroidCommandUI> commands, int commandType) {
 		for (int i = 0; i < commands.size(); i++) {
@@ -341,10 +445,13 @@ public class MicroEmulator extends MicroEmulatorActivity {
 	
     private boolean ignoreKey(int keyCode) {
         switch (keyCode) {
-        case KeyEvent.KEYCODE_MENU:
-        case KeyEvent.KEYCODE_VOLUME_DOWN:
-        case KeyEvent.KEYCODE_VOLUME_UP:
-        case KeyEvent.KEYCODE_HEADSETHOOK: 
+        //case KeyEvent.KEYCODE_VOLUME_DOWN:
+        //case KeyEvent.KEYCODE_VOLUME_UP:
+        case KeyEvent.KEYCODE_HEADSETHOOK:
+		case KeyEvent.KEYCODE_SHIFT_RIGHT:
+		case KeyEvent.KEYCODE_SHIFT_LEFT:
+		case KeyEvent.KEYCODE_ALT_RIGHT:
+		case KeyEvent.KEYCODE_ALT_LEFT:  
             return true;
         default:
             return false;
