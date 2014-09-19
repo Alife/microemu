@@ -30,8 +30,12 @@ import org.android.annotation.DisableView;
 import org.android.annotation.Entries;
 import org.android.annotation.Summary;
 import org.android.annotation.Title;
+import org.android.annotation.Type;
+import org.microemu.opm422.R;
 
-@Title("settings")
+import android.text.InputType;
+
+@Title(R.string.Config_Title)
 public class Config extends AndroidConfig {
 
 	@DisableView()
@@ -39,46 +43,46 @@ public class Config extends AndroidConfig {
 	@DisableView()
     public static final String Name = "AndroidConfig";
 	
-	@Title("字体")
+	@Title(R.string.Config_Font_Title)
 	public Font Font = new Font();
 	
-	@Title("字体")
+	@Title(R.string.Config_Font_Title)
 	public class Font{
-		@Title("小号字体")
-		@Entries(value={8,10,12,14,16,18},names={"8","10","12","14","16","18"})
+		@Type(InputType.TYPE_CLASS_NUMBER)
+		@Title(R.string.Config_SIZE_SMALL_Title)
+		@Entries(value={8,10,12,14,16,18},names={"8","10","12","14","16","18"}
+			,nameId = R.array.FontSIZE_SMALL_Name, valueId = R.array.FontSIZE_SMALL_Value)
 		public int SIZE_1SMALL = FONT_SIZE_SMALL;
 		
-		@Title("中号字体")
-		@Entries(value={12,14,16,18,20,22,24,26},names={"12","14","16","18","20","22","24","26"})
+		@Type(InputType.TYPE_CLASS_NUMBER)
+		@Title(R.string.Config_SIZE_MEDIUM_Title)
+		@Entries(value={12,14,16,18,20,22,24,26},names={"12","14","16","18","20","22","24","26"}
+			,nameId = R.array.FontSIZE_MEDIUM_Name, valueId = R.array.FontSIZE_MEDIUM_Value)
 		public int SIZE_2MEDIUM = FONT_SIZE_MEDIUM;
 		
-		@Title("大号字体")
-		@Entries(value={16,18,20,22,24,26,28,30,32,34},
-				names={"16","18","20","22","24","26","28","30","32","34"})
+		@Type(InputType.TYPE_CLASS_NUMBER)
+		@Title(R.string.Config_SIZE_LARGE_Title)
+		@Entries(value={16,18,20,22,24,26,28,30,32,34}
+			,names={"16","18","20","22","24","26","28","30","32","34"}
+			,nameId = R.array.FontSIZE_LARGE_Name, valueId = R.array.FontSIZE_LARGE_Value)
 		public int SIZE_3LARGE = FONT_SIZE_LARGE;
 		
 	}
 	
-	@Title("默认全屏")
-	@Summary("仅启动时生效。")
+	@Title(R.string.Config_DefaultFull_Title)
+	@Summary(R.string.Config_DefaultFull_Summary)
 	public static boolean Screen_DefaultFull = true;
-	@Title("双击切换全屏")
+	@Title(R.string.Config_SwitchOnDoubleTap_Title)
     public static boolean Screen_SwitchOnDoubleTap = false;
-//	@Title("长按调出设置页面")
-//	public static boolean Setting_LongPressOpen = false;
-//	@Title("长按调出设置的时间")
-//	@Summary("单位秒")
-//	@Entries(value={1,2,3,4,5},names={"1秒","2秒","3秒","4秒","5秒"})
-//	public static int Setting_LongPressTimeout = 1;
-	@Title("直输界面启用数字键")
+	@Title(R.string.Config_SupportNumKey_Title)
 	public static boolean Setting_SupportNumKey = false;
 	//@Title("OnPause 时暂停 app")
 	@DisableView()
 	public static boolean Setting_PauseAppOnPause = true;
-	@Title("透明通知栏")
-	@Summary("4.0 以上无效")
+	@Title(R.string.Config_TransparentStatusBar_Title)
+//	@Summary("4.0 以上无效")
 	public static boolean Screen_TransparentStatusBar = false;
-	@Title("自定义菜单样式")
+	@Title(R.string.Config_CusomMenu_Title)
 	public static boolean Setting_CusomMenu = false;
     
 }

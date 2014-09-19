@@ -2,5 +2,22 @@
 <resources>
 
     <string name="app_name">OPM 4.22</string>
+    <string name="Config_Title">设置</string>
+    <string name="Config_Font_Title">字体</string>
+    <string name="Config_SIZE_SMALL_Title">小号字体</string>
+    <string name="Config_SIZE_MEDIUM_Title">中号字体</string>
+    <string name="Config_SIZE_LARGE_Title">大号字体</string>
+    <string name="Config_DefaultFull_Title">默认全屏</string>
+    <string name="Config_DefaultFull_Summary">仅启动时生效。\r\n</string>
+    <string name="Config_SwitchOnDoubleTap_Title">默认全屏</string>
+    <string name="Config_SupportNumKey_Title">直输界面启用数字键</string>
+    <string name="Config_TransparentStatusBar_Title">透明通知栏(4.0 以下有效)</string>
+    <string name="Config_CusomMenu_Title">自定义菜单样式</string>
+    <string name="Setting_Summary_Prefix">默认为 </string>
+    <string name="Setting_Summary_suffix">当前为 </string>
+    <string name="Setting_Language">语言 </string>
+    <string name="Setting_Language_Default">跟随系统</string>
+    <string name="editListPreference_customValue">自定义</string>
+    <string name="editListPreference_customValue_formatError">只能是数字</string>
 
 </resources>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="FontSIZE_SMALL_Name">
+        <item>8</item>
+        <item>10</item>
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>18</item>
+    </string-array>
+
+    <integer-array name="FontSIZE_SMALL_Value">
+        <item>8</item>
+        <item>10</item>
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>18</item>
+    </integer-array>
+
+    <string-array name="FontSIZE_MEDIUM_Name">
+        <item>8</item>
+        <item>10</item>
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>18</item>
+    </string-array>
+
+    <integer-array name="FontSIZE_MEDIUM_Value">
+
+        <!-- 12,14,16,18,20,22,24,26 -->
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+        <item>22</item>
+        <item>24</item>
+        <item>26</item>
+    </integer-array>
+
+    <string-array name="FontSIZE_LARGE_Name">
+
+        <!-- 16,18,20,22,24,26,28,30,32,34 -->
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+        <item>22</item>
+        <item>24</item>
+        <item>26</item>
+        <item>28</item>
+        <item>30</item>
+        <item>32</item>
+        <item>34</item>
+    </string-array>
+
+    <integer-array name="FontSIZE_LARGE_Value">
+        <item>16</item>
+        <item>18</item>
+        <item>20</item>
+        <item>22</item>
+        <item>24</item>
+        <item>26</item>
+        <item>28</item>
+        <item>30</item>
+        <item>32</item>
+        <item>34</item>
+    </integer-array>
+
+    <string-array name="lang_name">
+        <item>简体中文</item>
+        <item>English</item>
+    </string-array>
+    <string-array name="lang_value">
+        <item>zh_CN</item>
+        <item>en_US</item>
+    </string-array>
+
+</resources>

@@ -1,6 +1,7 @@
 package org.android.util;
 
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.List;
 
 /**
@@ -608,5 +609,13 @@ public class Tools {
 
 	public static InputStream getResourceAsStream(Class<?> class1,String resName) {
 		return class1.getResourceAsStream(resName);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public static <E> E[] add(E[] entries, E customStr) {
+		E[] _e=(E[]) Array.newInstance(customStr.getClass(), entries.length+1);
+		_e[0]=customStr;
+		for (int i = 0; i < entries.length; i++) {_e[i+1]=entries[i];}
+		return _e;
 	}
 }
