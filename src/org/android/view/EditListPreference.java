@@ -1,6 +1,5 @@
 package org.android.view;
 import java.util.Arrays;
-import java.util.regex.Pattern;
 
 import org.android.util.Tools;
 import org.microemu.opm422.R;
@@ -27,25 +26,34 @@ public class EditListPreference extends ListPreference implements OnPreferenceCl
 	
 	private Toast myToast;
 	public int inputType;
-	String customValue="Custom Value";
+	String customString="Custom Value";
+	String customValue="";
 	/**
 	 * @param context
 	 * @param attrs
 	 */
 	public EditListPreference(Context context) {
 		super(context);
-		customValue = context.getText(R.string.editListPreference_customValue).toString();
+		customString = context.getText(R.string.editListPreference_customValue).toString();
 		myToast=Toast.makeText(context, "", Toast.LENGTH_SHORT);
 	}
 	public EditListPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
-		customValue = context.getText(R.string.editListPreference_customValue).toString();
+		customString = context.getText(R.string.editListPreference_customValue).toString();
 		myToast=Toast.makeText(context, "", Toast.LENGTH_SHORT);
 	}
 
 	@Override
 	public CharSequence[] getEntries() {
 		CharSequence[] entries = super.getEntries();
+		if(Arrays.binarySearch(entries, customString)<-1){
+			entries=Tools.add(entries,customString);
+		}
+		return entries;
+	}
+	@Override
+	public CharSequence[] getEntryValues() {
+		CharSequence[] entries = super.getEntryValues();
 		if(Arrays.binarySearch(entries, customValue)<-1){
 			entries=Tools.add(entries,customValue);
 		}
@@ -60,31 +68,22 @@ public class EditListPreference extends ListPreference implements OnPreferenceCl
 		builder.setSingleChoiceItems(this.getEntries(), checkItem, new DialogInterface.OnClickListener() {
 			
 			public void onClick(DialogInterface dialog, int which) {
-				if(getEntries()[which].equals(customValue)){
+				if(getEntries()[which].equals(customString)){
 					final EditText et=new EditText(EditListPreference.this.getContext());
 					et.setText(getValue());
 					et.setInputType(inputType);
 					new AlertDialog.Builder(EditListPreference.this.getContext())
-					.setTitle(customValue).setView(et)
+					.setTitle(customString).setView(et)
 					.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
 						
 						public void onClick(DialogInterface dialog, int which) {
-							String sValue=et.getText().toString();
-							if(Pattern.compile("\\d+").matcher(sValue).matches()){
-								int iValue=Integer.parseInt(sValue);
-								if(iValue>0&&iValue<50){
-									setValue(iValue+"");
-								}
-							}else{
-								myToast.setText(R.string.editListPreference_customValue_formatError);
-								myToast.show();
-							}
+							setValue(et.getText().toString());
 						}
 					})
 					.setNeutralButton(android.R.string.cancel, null)
 					.create().show();
 				}else{
-					setValue(getEntryValues()[which]+"");
+					setValue(getEntryValues()[which-1]+"");
 				}
 				dialog.dismiss();
 			}
@@ -104,12 +103,11 @@ public class EditListPreference extends ListPreference implements OnPreferenceCl
 		super.setOnPreferenceChangeListener(onPreferenceChangeListener);
 	}
 	private int getValueIndex(String value){
-		int len=0;
-		for(int i=getEntryValues().length-1;i>=len;i--){
-			if(value.equals(getEntryValues()[i])){
-				return i+1;
-			}
-		}
+		int len=Arrays.binarySearch(getEntryValues(), value);
+		if(len==-1)len=0;
+		else len = len+1;
 		return len;//选中“自定义” 一项
 	}
+	
+	
 }

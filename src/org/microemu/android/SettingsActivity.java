@@ -41,20 +41,20 @@ public class SettingsActivity extends PreferenceActivity implements OnPreference
 		preferenceScreen = getPreferenceManager().createPreferenceScreen(this);
 		setPreferenceScreen(preferenceScreen);
 		
-//		ListPreference langPreference = new ListPreference(this);
-//		preferenceScreen.addItemFromInflater(langPreference);
-//		langPreference.setEntries(R.array.lang_name);
-//		langPreference.setEntryValues(R.array.lang_value);
-//		langPreference.setKey(language);
-//		langPreference.setTitle(R.string.Setting_Language);
-//		langPreference.setEntries(Tools.add(langPreference.getEntries(),getText(R.string.Setting_Language_Default)));
-//		langPreference.setEntryValues(Tools.add(langPreference.getEntryValues(),Locale.getDefault().toString()));
-//		langPreference.setOnPreferenceChangeListener(this);
-//		String summary = getText(R.string.Setting_Summary_Prefix).toString();
-//		summary += Locale.getDefault().toString();
-//		summary=summary+" "+getText(R.string.Setting_Summary_suffix).toString()+prefs.getAll().get(language);
-//		langPreference.setSummary(summary);
-//		langPreference.setValue(prefs.getString(language,Locale.getDefault().toString()));
+		ListPreference langPreference = new ListPreference(this);
+		preferenceScreen.addItemFromInflater(langPreference);
+		langPreference.setEntries(R.array.lang_name);
+		langPreference.setEntryValues(R.array.lang_value);
+		langPreference.setKey(language);
+		langPreference.setTitle(R.string.Setting_Language);
+		langPreference.setEntries(Tools.add(langPreference.getEntries(),getText(R.string.Setting_Language_Default)));
+		langPreference.setEntryValues(Tools.add(langPreference.getEntryValues(),getText(R.string.Setting_Language_Default)));
+		langPreference.setOnPreferenceChangeListener(this);
+		String summary = getText(R.string.Setting_Summary_Prefix).toString();
+		summary += Locale.getDefault().toString();
+		summary=summary+" "+getText(R.string.Setting_Summary_suffix).toString()+prefs.getAll().get(language);
+		langPreference.setSummary(summary);
+		langPreference.setValue(prefs.getString(language,Locale.getDefault().toString()));
 		
 		AddPreference(new Config());
 	}
@@ -156,13 +156,16 @@ public class SettingsActivity extends PreferenceActivity implements OnPreference
 			Locale l=Locale.getDefault();
 			if(!(o==null||"".equals(o.toString().trim())))
 				l=new Locale(o.toString());
+			if(o.equals(getText(R.string.Setting_Language_Default)))
+				l=Locale.getDefault();
 			if(l!=null){
 				updateLanguage(l);
 			}
 		}
 
 		String summary = (String) p.getSummary();
-		summary = summary.substring(0,summary.indexOf("当前为")+3)+" "+o;
+		String suffix = getText(R.string.Setting_Summary_suffix).toString();
+		summary = summary.substring(0,summary.indexOf(suffix)+suffix.length())+" "+o;
 		p.setSummary(summary);
 		//如果返回false表示不允许被改变  true表示允许改变
 		return true;

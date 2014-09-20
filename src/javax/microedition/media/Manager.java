@@ -1,11 +1,12 @@
 package javax.microedition.media;
 
+import java.io.IOException;
 import java.io.InputStream;
 
 import javax.microedition.media.protocol.DataSource;
 
 import org.microemu.android.media.AndroidMediaPlayer;
-import org.microemu.android.media.MediaPlayer;
+import org.microemu.android.media.MyMediaPlayer;
 
 public class Manager {
     public static String MIDI_DEVICE_LOCATOR = "device://midi";
@@ -17,11 +18,11 @@ public class Manager {
         return androidMediaPlayer;
     }
     
-    public static Player createPlayer(String s) {
+    public static Player createPlayer(String s) throws IOException {
 //        AndroidMediaPlayer androidMediaPlayer = new AndroidMediaPlayer();
 //        androidMediaPlayer.setInput(s, null);
 //        return androidMediaPlayer;
-    	MediaPlayer androidMediaPlayer = new MediaPlayer();
+    	MyMediaPlayer androidMediaPlayer = new MyMediaPlayer();
 		androidMediaPlayer.setInput(s);
 		return androidMediaPlayer;
     }
