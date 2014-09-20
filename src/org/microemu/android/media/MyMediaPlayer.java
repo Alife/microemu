@@ -4,6 +4,9 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 import javax.microedition.lcdui.Canvas;
@@ -15,16 +18,26 @@ import javax.microedition.media.Player;
 import javax.microedition.media.PlayerListener;
 import javax.microedition.media.control.VideoControl;
 
-import org.microemu.android.MEmulator;
 import org.microemu.app.ui.DisplayRepaintListener;
 
-import android.media.AudioManager;
-import android.net.Uri;
+import android.media.MediaPlayer;
+import android.media.MediaPlayer.OnCompletionListener;
 
-public class MediaPlayer implements Player,VideoControl{
 
-	String file="";
-	public MediaPlayer() {
+public class MyMediaPlayer implements Player,VideoControl,OnCompletionListener{
+
+    static MediaPlayer mMediaPlayer=new MediaPlayer();
+    static File mCurrentFile;
+    static File mPrepareFile;
+    /* 播放列表 */  
+    // file list on the same directory
+    static List<File> mFileList = new ArrayList<File>();
+    /* 当前播放歌曲的索引 */  
+    static  int currentListItme = 0;  
+    /* 音乐的路径 */  
+    static File MUSIC_PATH;  
+    
+	public MyMediaPlayer() {
 	}
 	
 	@Override
@@ -35,7 +48,15 @@ public class MediaPlayer implements Player,VideoControl{
 
 	public void setInput(String s) {
 		if (s.startsWith("file://"))s = s.replace("file://", "");
-		file = s;
+		mPrepareFile = new File(s);
+		MUSIC_PATH = new File(mPrepareFile.getParent());
+    	File[] list = mPrepareFile.listFiles();
+        
+    	if(mPrepareFile.isDirectory()&&list.length>0){
+    		mPrepareFile=list[0];
+			MUSIC_PATH = mPrepareFile;
+    	}
+    	mFileList = Arrays.asList(MUSIC_PATH.listFiles());
 	}
 
 	@Override
@@ -58,14 +79,61 @@ public class MediaPlayer implements Player,VideoControl{
 
 	@Override
 	public void start() throws MediaException {
-		MEmulator.bgm.play(MEmulator.context, Uri.fromFile(new File(file)), true, AudioManager.STREAM_MUSIC);
-		
+	   	try {
+	    	if (mMediaPlayer.isPlaying()){
+		   		stop();
+	    		if(mCurrentFile!=null
+	    		&&mCurrentFile.getAbsoluteFile().equals(mPrepareFile.getAbsoluteFile())){
+			   		return;
+		    	}
+	    	}
+			mMediaPlayer.setDataSource(mPrepareFile.getAbsolutePath());
+        	mMediaPlayer.prepare();
+        	mMediaPlayer.start();
+        	mMediaPlayer.setOnCompletionListener(this);  
+    		mCurrentFile=mPrepareFile;
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalStateException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
+	 public void onCompletion(MediaPlayer arg0)  
+     {  //播放完成一首之后进行下一首  
+     	try {
+			stop();
+			nextMusic();
+		} catch (MediaException e) {
+			e.printStackTrace();
+		}
+     }  
+	/* 下一首 */  
+	private void nextMusic() {
+		for (int i = currentListItme; i < mFileList.size(); i++) {
+			File fi = mFileList.get(i);
+			if (fi.getAbsoluteFile().equals(mCurrentFile.getAbsoluteFile())) {
+				if (i == mFileList.size() - 1) { // last one
+					currentListItme = 0;
+				} else { // next one
+					currentListItme = i + 1;
+				}
+				mPrepareFile = mFileList.get(currentListItme);
+				try { // is a music type file
+					start();
+					break;
+				} catch (MediaException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
-
 	@Override
 	public void stop() throws MediaException {
-		MEmulator.bgm.stop();
-		
+		//MEmulator.player.stop();
+		mMediaPlayer.stop();
+		mMediaPlayer.reset();
 	}
 
 	@Override
@@ -168,7 +236,7 @@ public class MediaPlayer implements Player,VideoControl{
 	 * @param locator the locator that was used when creating the player.
 	 * 
 	 */
-	public MediaPlayer(Player player, String locator) {
+	public MyMediaPlayer(Player player, String locator) {
 		m_player = player;
 		// TODO we should parse the locator in order to setup the
 		// original video size properly.

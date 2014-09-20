@@ -40,6 +40,7 @@ import javax.microedition.io.ConnectionNotFoundException;
 import org.android.annotation.DisableView;
 import org.android.annotation.Entries;
 import org.android.annotation.Title;
+import org.android.media.MyMediaPlayer;
 import org.microemu.DisplayAccess;
 import org.microemu.MIDletAccess;
 import org.microemu.MIDletBridge;
@@ -67,7 +68,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
-import android.media.AsyncPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -97,7 +97,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 //	static final String menu_scan_sdcard="scan sdcard";
 //	static final String menu_apkTool="ApkTool";
 	
-	public static AsyncPlayer bgm = new AsyncPlayer("AsyncPlayer");
+	public static MyMediaPlayer player;
 	public static Context context;
 	Config _config = new Config();
     private boolean isFirstResume=true;
@@ -177,7 +177,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 				Launcher.addMIDletEntry(entry);
 	    }       
         midlet = common.initMIDlet(false);
-        
+
         context = getApplication();
 //        bgm.play(getApplication(), Uri.fromFile(new File("/sdcard/bgm.mp3")), true, AudioManager.STREAM_MUSIC);
     }
@@ -227,10 +227,10 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	public boolean dispatchKeyEvent(KeyEvent event) {
     	boolean v = super.dispatchKeyEvent(event);
 		int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
-
-		Log.i(LOG_TAG, "keyAction:"+keyAction+
-				" keyCode:"+keyCode+" menuClickTime:"+menuClickTime+
-				" Char:"+unicodeChar);
+//
+//		Log.i(LOG_TAG, "keyAction:"+keyAction+
+//				" keyCode:"+keyCode+" menuClickTime:"+menuClickTime+
+//				" Char:"+unicodeChar);
 
 		MIDletAccess ma = MIDletBridge.getMIDletAccess();
 		if (ma == null) {return false;}
@@ -412,11 +412,12 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
             
             //android.util.Log.i(LOG_TAG, "config: FullscreenChange "+config.Screen_SwitchOnDoubleTap);      	
     		windowFullscreen = !windowFullscreen;
-    		if(Config.Screen_SwitchOnDoubleTap)switchFullScreen(windowFullscreen,0);
-    		Editor editor=pref.edit();
-    		editor.putBoolean("Screen_DefaultFull", windowFullscreen);
-    		editor.commit();
-			
+    		if(Config.Screen_SwitchOnDoubleTap){
+    			switchFullScreen(windowFullscreen,0);
+	    		Editor editor=pref.edit();
+	    		editor.putBoolean("Screen_DefaultFull", windowFullscreen);
+	    		editor.commit();
+    		}
         	return super.onDoubleTap(e);
         }
 
@@ -510,7 +511,6 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 
             final LayoutParams params = getWindow().getAttributes();  
 			if (windowFullscreen) {  
-	            android.util.Log.i(LOG_TAG, "onDoubleTap: FullscreenChange "+windowFullscreen);      	
                 params.flags |= WindowManager.LayoutParams.FLAG_FULLSCREEN; 
                 getWindow().setAttributes(params);  
                 getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);                
@@ -578,7 +578,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 			}
 			menuAdapter = new MenuAdapter(this, data, R.layout.gridview_menu_item, 
 					new String[]{ "itemText" }, 
-					new int[]{  R.id.item_text });
+					new int[]{ R.id.item_text });
 			
 			menuGrid.setAdapter(menuAdapter);//为menuGrid添加适配器
 			menuGrid.setOnItemClickListener(new MenuItemClickListener());//监听你点了那一项
@@ -712,6 +712,8 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 			}else intent.setData(uri);
 			Log.i(MicroEmulator.LOG_TAG, "platformRequest "+intent.getDataString() +" type:"+intent.getType());
 			startActivity(intent);
+			
+			onPause();
 		} catch (ActivityNotFoundException e) {
 			throw new ConnectionNotFoundException(e.getMessage());
 		}
@@ -836,6 +838,76 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 //        	}
 //        }  
     } 
+
+    
+    
+
+//    public static void commandAction(Command paramCommand, Displayable paramDisplayable){
+//    	Log.i("commandAction.Displayable ", "commandAction.Displayable "+paramCommand.getLabel()+" "+paramCommand.getLongLabel());
+//    } 
+//    public static void commandAction(Command paramCommand,Item paramItem){
+//    	Log.i("commandAction.Item ", "commandAction.Item "+paramCommand.getLabel()+" "+paramCommand.getLongLabel());
+//    }  
+//    public static void getResourceAsStream(String string){
+//    	if("l".equals(string))
+//    		Debug.waitForDebugger();
+//    	Log.i(LOG_TAG, "getResourceAsStream "+string);
+//    } 
+//    public static void a_String_ar(String string){
+////    	if("l".equals(string))
+////    		Debug.waitForDebugger();
+//    	Log.i(LOG_TAG, "a_String_ar "+string);
+//    }
+//    public static void a_Lar(String string){
+////    	if("l".equals(string))
+////    		Debug.waitForDebugger();
+//    	Log.i(LOG_TAG, "a_Lar "+string);
+//    }  
+//    public static void bz(Object b,String string){
+//    	Debug.waitForDebugger();
+//		//Log.i(LOG_TAG, "bz "+b.getClass().getSimpleName());
+//		try {
+//			Class<?> bzClass = Class.forName("bz");
+//			for (Field field : bzClass.getFields()) {
+//				Object v = field.get(null);
+//				if(v instanceof String[])
+//					v = Arrays.toString((String[])v);
+//				//Log.i(LOG_TAG, "bz name: "+field.getName() +" value:"+v);
+//			}
+//		} catch (IllegalArgumentException e) {
+//			e.printStackTrace();
+//		} catch (IllegalAccessException e) {
+//			e.printStackTrace();
+//		} catch (ClassNotFoundException e) {
+//			e.printStackTrace();
+//		}
+//	}
+//    
+//    public static void bz(String string){
+//		if("复制全部".equals(string)){
+//    	Debug.waitForDebugger();
+//		Log.i(LOG_TAG, "bz "+string);
+//		}
+//    }
+//    public static void keyPressed(final int n){
+//    	Log.i(LOG_TAG, "keyPressed "+n);
+//    } 
+//    public static void getKeyName(String name,final int n){
+//    	Log.i(LOG_TAG, "getKeyName "+n+" "+name);
+//    } 
+//    public static void pointerReleased(final int n, int b){
+//    	Log.i(LOG_TAG, "pointerReleased "+n +" "+b);
+//    } 
+//	public static void a(Graphics paramGraphics, int p1, int p2, int p3){
+////    	Log.i(LOG_TAG, "Graphics "+p1 +" "+p2+" "+p3);		
+//	}
+//	public static void a(){
+////    	Log.i(LOG_TAG, "Graphics ");		
+//	}
+//	public static void aInputStream(InputStream a){
+////    	Log.i(LOG_TAG, "Graphics ");		
+//	}	
+
 }
 
 
