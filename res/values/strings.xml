@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">OPM 4.22</string>
-    <string name="Config_Title">Setting</string>
+    <string name="Setting">Setting</string>
     <string name="Config_Font_Title">FontSize</string>
     <string name="Config_SIZE_SMALL_Title">Small</string>
     <string name="Config_SIZE_MEDIUM_Title">Medium</string>

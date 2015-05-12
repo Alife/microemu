@@ -69,7 +69,14 @@ public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 				setFocusableInTouchMode(false);
 		//		setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
 				
-				labelView = new TextView(activity){
+				labelView = new TextView(activity);
+				labelView.setFocusable(false);
+				labelView.setFocusableInTouchMode(false);
+				labelView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+				labelView.setTextAppearance(labelView.getContext(), android.R.style.TextAppearance_Large);
+				addView(labelView);
+				
+				editView = new EditText(activity){
 					@Override
 					public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
 						Configuration conf = Resources.getSystem().getConfiguration();
@@ -80,14 +87,17 @@ public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 						
 						return super.onCreateInputConnection(outAttrs);
 					}
+//					@Override
+//					public boolean dispatchKeyEvent(KeyEvent event) {
+//						
+//						int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
+//						Log.i(MicroEmulator.LOG_TAG, "keyAction:"+keyAction+
+//								" keyCode:"+keyCode+
+//								" Char:"+unicodeChar +" "+AndroidTextFieldUI.class.getClass());
+//
+//						return super.dispatchKeyEvent(event);
+//					}					
 				};
-				labelView.setFocusable(false);
-				labelView.setFocusableInTouchMode(false);
-				labelView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
-				labelView.setTextAppearance(labelView.getContext(), android.R.style.TextAppearance_Large);
-				addView(labelView);
-				
-				editView = new EditText(activity);
 				editView.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.FILL_PARENT, LinearLayout.LayoutParams.FILL_PARENT));
 				editView.addTextChangedListener(new TextWatcher() {
 
@@ -172,8 +182,35 @@ public class AndroidTextFieldUI extends LinearLayout implements TextFieldUI {
 		});
 	}
 
+	private String getStringTransfer;
 	public String getString() {
-		return editView.getText().toString();
+		if (activity.isOperaMini())
+			return editView.getText().toString();
+
+		if (activity.isActivityThread()) {
+			getStringTransfer = editView.getText().toString();
+		} else {
+			getStringTransfer = null;
+			activity.post(new Runnable() {
+				public void run() {
+					synchronized (AndroidTextFieldUI.this) {
+						getStringTransfer = editView.getText().toString();
+						AndroidTextFieldUI.this.notify();
+					}
+				}
+			});
+
+			synchronized (AndroidTextFieldUI.this) {
+				if (getStringTransfer == null) {
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		return getStringTransfer;
 	}
 	
 }

@@ -166,8 +166,7 @@ public class AndroidMediaPlayer implements Player, VolumeControl
         }
 
         public void onCompletion(MediaPlayer mediaPlayer) {
-            AndroidMediaPlayer r0_AndroidMediaPlayer = AndroidMediaPlayer.this;
-            r0_AndroidMediaPlayer.loopCount--;
+            loopCount--;
             notifyListeners(PlayerListener.END_OF_MEDIA, new Long((long) (mediaPlayer.getCurrentPosition() * 1000)));
             if (loopCount <= 0 || state != 400) {
                 state = 300;

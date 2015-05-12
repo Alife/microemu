@@ -26,6 +26,7 @@
 
 package org.microemu.android.device.ui;
 
+import javax.microedition.lcdui.CommandListener;
 import javax.microedition.lcdui.TextBox;
 import javax.microedition.lcdui.TextField;
 
@@ -44,7 +45,6 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
 import android.view.Gravity;
-import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
@@ -74,16 +74,6 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 
 						return super.onCreateInputConnection(outAttrs);
 					}
-					@Override
-					public boolean dispatchKeyEvent(KeyEvent event) {
-						
-						int keyCode=event.getKeyCode(),keyAction=event.getAction(),unicodeChar=event.getUnicodeChar();
-						Log.i(MicroEmulator.LOG_TAG, "keyAction:"+keyAction+
-								" keyCode:"+keyCode+
-								" Char:"+unicodeChar);
-
-						return super.dispatchKeyEvent(event);
-					}					
 				};
 				editView.setText(textBox.getString());
 				editView.setGravity(Gravity.TOP);
@@ -130,7 +120,6 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 				((LinearLayout) view).addView(editView);
 				
 				invalidate();
-				textBox.getString();
 			}
 		});		
 	}
@@ -153,8 +142,37 @@ public class AndroidTextBoxUI extends AndroidDisplayableUI implements TextBoxUI 
 		return editView.getSelectionStart();
 	}
 	
+	private String getStringTransfer;
+
 	public String getString() {
-        return editView.getText().toString();
+		if (activity.isOperaMini())
+			return editView.getText().toString();
+
+		if (activity.isActivityThread()) {
+			getStringTransfer = editView.getText().toString();
+		} else {
+			getStringTransfer = null;
+			activity.post(new Runnable() {
+				public void run() {
+					synchronized (AndroidTextBoxUI.this) {
+						getStringTransfer = editView.getText().toString();
+						AndroidTextBoxUI.this.notify();
+					}
+				}
+			});
+
+			synchronized (AndroidTextBoxUI.this) {
+				if (getStringTransfer == null) {
+					try {
+						wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+		
+		return getStringTransfer;
     }
 
     public void setString(final String text) {

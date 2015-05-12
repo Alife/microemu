@@ -5,26 +5,23 @@ import java.io.InputStream;
 
 import javax.microedition.media.protocol.DataSource;
 
+import org.microemu.android.MEmulator;
 import org.microemu.android.media.AndroidMediaPlayer;
-import org.microemu.android.media.MyMediaPlayer;
 
 public class Manager {
     public static String MIDI_DEVICE_LOCATOR = "device://midi";
     public static String TONE_DEVICE_LOCATOR = "device://tone";
     
     public static Player createPlayer(InputStream inputStream, String type) {
-        AndroidMediaPlayer androidMediaPlayer = new AndroidMediaPlayer();
+        AndroidMediaPlayer androidMediaPlayer = new AndroidMediaPlayer(MEmulator.context);
         androidMediaPlayer.setInput(inputStream, type);
         return androidMediaPlayer;
     }
     
     public static Player createPlayer(String s) throws IOException {
-//        AndroidMediaPlayer androidMediaPlayer = new AndroidMediaPlayer();
-//        androidMediaPlayer.setInput(s, null);
-//        return androidMediaPlayer;
-    	MyMediaPlayer androidMediaPlayer = new MyMediaPlayer();
-		androidMediaPlayer.setInput(s);
-		return androidMediaPlayer;
+        AndroidMediaPlayer androidMediaPlayer = new AndroidMediaPlayer(MEmulator.context);
+        androidMediaPlayer.setInput(s, null);
+        return androidMediaPlayer;
     }
     
     public static Player createPlayer(DataSource dataSource) throws MediaException {

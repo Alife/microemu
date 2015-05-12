@@ -42,7 +42,6 @@ public class SettingsActivity extends PreferenceActivity implements OnPreference
 		setPreferenceScreen(preferenceScreen);
 		
 		ListPreference langPreference = new ListPreference(this);
-		preferenceScreen.addItemFromInflater(langPreference);
 		langPreference.setEntries(R.array.lang_name);
 		langPreference.setEntryValues(R.array.lang_value);
 		langPreference.setKey(language);
@@ -55,7 +54,7 @@ public class SettingsActivity extends PreferenceActivity implements OnPreference
 		summary=summary+" "+getText(R.string.Setting_Summary_suffix).toString()+prefs.getAll().get(language);
 		langPreference.setSummary(summary);
 		langPreference.setValue(prefs.getString(language,Locale.getDefault().toString()));
-		
+		//preferenceScreen.addItemFromInflater(langPreference);
 		AddPreference(new Config());
 	}
 	

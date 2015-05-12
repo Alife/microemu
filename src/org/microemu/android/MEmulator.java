@@ -36,11 +36,13 @@ import java.util.Map;
 import java.util.Vector;
 
 import javax.microedition.io.ConnectionNotFoundException;
+import javax.microedition.lcdui.Command;
+import javax.microedition.lcdui.Displayable;
+import javax.microedition.lcdui.Item;
 
 import org.android.annotation.DisableView;
 import org.android.annotation.Entries;
 import org.android.annotation.Title;
-import org.android.media.MyMediaPlayer;
 import org.microemu.DisplayAccess;
 import org.microemu.MIDletAccess;
 import org.microemu.MIDletBridge;
@@ -93,11 +95,9 @@ import android.widget.Toast;
 
 public class MEmulator extends MicroEmulator implements OnTouchListener {
 
-	static final String menu_setting="设置";
 //	static final String menu_scan_sdcard="scan sdcard";
 //	static final String menu_apkTool="ApkTool";
 	
-	public static MyMediaPlayer player;
 	public static Context context;
 	Config _config = new Config();
     private boolean isFirstResume=true;
@@ -120,7 +120,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 		}
 
 		super.onCreate(icicle);
-	
+		
 		windowFullscreen=Config.Screen_DefaultFull;
 
     	if(android.os.Build.VERSION.SDK_INT <= 4)
@@ -179,8 +179,8 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
         midlet = common.initMIDlet(false);
 
         context = getApplication();
-//        bgm.play(getApplication(), Uri.fromFile(new File("/sdcard/bgm.mp3")), true, AudioManager.STREAM_MUSIC);
-    }
+
+	}
 
 	@Override
 	public void setContentView(View view) {
@@ -351,8 +351,8 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 //			}
 			//startActivityForResult(new Intent(MEmulator.this,ApkToolActivity.class), REQ_SYSTEM_SETTINGS);
 //		}else 
-		if(item.getTitle().equals(menu_setting)){
-	        startActivityForResult(new Intent(MEmulator.this,SettingsActivity.class),menu_setting.hashCode());
+		if(item.getTitle().equals(getText(R.string.Setting))){
+	        startActivityForResult(new Intent(MEmulator.this,SettingsActivity.class),getText(R.string.Setting).hashCode());
 		}
 		return result;
 	}
@@ -589,7 +589,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 	public boolean _onPrepareOptionsMenu(Menu pmenu)
 	{
 		boolean v= super.onPrepareOptionsMenu(pmenu);
-		pmenu.add(menu_setting);
+		pmenu.add(getText(R.string.Setting));
 		this.menu = pmenu;
 	    creatMenuGird();//初如化网格布局菜单
 	    menuAdapter.notifyDataSetChanged();
@@ -788,7 +788,6 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 		put("zip","application/zip");
 	}};
 
-
 	static int count=0;
 
     int FILE_SELECT_CODE=1;
@@ -807,7 +806,7 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
     @Override  
     public void onActivityResult(int requestCode, int resultCode, Intent data) {  
         super.onActivityResult(requestCode, resultCode, data);  
-    	if(requestCode==menu_setting.hashCode()){
+    	if(requestCode==getText(R.string.Setting).hashCode()){
             setConfig(getPreferences(config,getSharedPreferences(Config.Name, 0)));
                 switchFullScreen(Config.Screen_DefaultFull,0);
     	    //if(Config.Screen_DefaultFull!=windowFullscreen)
@@ -841,13 +840,23 @@ public class MEmulator extends MicroEmulator implements OnTouchListener {
 
     
     
-
-//    public static void commandAction(Command paramCommand, Displayable paramDisplayable){
-//    	Log.i("commandAction.Displayable ", "commandAction.Displayable "+paramCommand.getLabel()+" "+paramCommand.getLongLabel());
-//    } 
-//    public static void commandAction(Command paramCommand,Item paramItem){
-//    	Log.i("commandAction.Item ", "commandAction.Item "+paramCommand.getLabel()+" "+paramCommand.getLongLabel());
-//    }  
+//    invoke-static {p1, p2}, Lorg/microemu/android/MEmulator;->commandAction(Ljavax/microedition/lcdui/Command;Ljavax/microedition/lcdui/Displayable;)V
+    public static void commandAction(Command paramCommand, Displayable paramDisplayable){
+    	Log.i("commandAction.Displayable ", "commandAction.Displayable "+paramCommand.getLabel()+" "+paramCommand.getLongLabel());
+    } 
+//    invoke-static {p1, p2}, Lorg/microemu/android/MEmulator;->commandAction(Ljavax/microedition/lcdui/Command;Ljavax/microedition/lcdui/Item;)V
+    public static void commandAction(Command paramCommand,Item paramItem){
+    	Log.i("commandAction.Item ", "commandAction.Item "+paramCommand.getLabel()+" "+paramCommand.getLongLabel());
+    }  
+    public void commandAction1(Command paramCommand, Displayable paramDisplayable){
+    	commandAction(paramCommand, paramDisplayable);
+    } 
+    public void commandAction1(Command paramCommand,Item paramItem){
+    	commandAction(paramCommand, paramItem);
+    } 
+    public static void a_V(String paramString1, String paramString2, String paramString3, boolean paramBoolean){
+    	Log.i("cg.a_V ", paramString1+" "+ paramString2+" "+ paramString3+" "+ paramBoolean);
+    }  
 //    public static void getResourceAsStream(String string){
 //    	if("l".equals(string))
 //    		Debug.waitForDebugger();

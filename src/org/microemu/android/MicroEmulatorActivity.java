@@ -260,4 +260,9 @@ Log.d("AndroidCanvasUI", "set content view: " + view);
 	public boolean _platformRequest(String url) throws ConnectionNotFoundException{
 		return true;
 	};
+
+	public boolean isOperaMini() {
+		return getPackageName().indexOf("opm") > -1
+				|| getPackageName().indexOf("opera") > -1;
+	}
 }

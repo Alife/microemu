@@ -35,7 +35,7 @@ import org.microemu.opm422.R;
 
 import android.text.InputType;
 
-@Title(R.string.Config_Title)
+@Title(R.string.Setting)
 public class Config extends AndroidConfig {
 
 	@DisableView()
